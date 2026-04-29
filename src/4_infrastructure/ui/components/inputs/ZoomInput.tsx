@@ -24,6 +24,8 @@ export default function ZoomInput({ label, tooltipInfo, ...props }: ZoomInputPro
       </label>
       <input
         {...props}
+        // THÊM DÒNG DƯỚI ĐÂY ĐỂ FIX LỖI 100%
+        suppressHydrationWarning 
         onFocus={(e) => {
           setIsFocused(true);
           if (props.onFocus) props.onFocus(e);
@@ -35,7 +37,6 @@ export default function ZoomInput({ label, tooltipInfo, ...props }: ZoomInputPro
         className="w-full bg-slate-800/80 border-2 border-slate-600 focus:border-blue-500 rounded-xl px-4 py-3 text-white text-sm outline-none shadow-inner transition-colors placeholder:text-slate-500"
       />
       
-      {/* Tooltip GameFi hiện ra khi Focus */}
       <AnimatePresence>
         {isFocused && (
           <motion.div
@@ -46,7 +47,6 @@ export default function ZoomInput({ label, tooltipInfo, ...props }: ZoomInputPro
           >
             <Info className="w-3 h-3" />
             {tooltipInfo}
-            {/* Mũi tên trỏ xuống của Tooltip */}
             <div className="absolute -bottom-1 right-4 w-2 h-2 bg-blue-600 rotate-45 border-r border-b border-blue-400"></div>
           </motion.div>
         )}

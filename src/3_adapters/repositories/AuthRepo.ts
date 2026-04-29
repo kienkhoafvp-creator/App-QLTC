@@ -4,15 +4,22 @@ import { supabase } from '../../4_infrastructure/database/supabaseClient';
 export const AuthRepo = {
   // Đăng ký
   async register(email: string, password: string, fullName: string, username: string, phone: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName, username, phone }, // Đẩy data thô vào Metadata
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      // Dùng logic này để lấy link chuẩn dù bạn đang ở local hay vercel
+      emailRedirectTo: `${window.location.origin}/dashboard`, 
+      data: {
+        full_name: fullName,
+        username: username,
+        phone: phone,
       },
-    });
-    if (error) throw new Error(error.message);
-    return data;
+    },
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
   },
 
   // Đăng nhập đa năng (Email / Username / SĐT)
