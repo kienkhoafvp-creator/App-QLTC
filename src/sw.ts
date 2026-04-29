@@ -1,4 +1,4 @@
-// src/app/sw.ts
+// src/sw.ts
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { Serwist } from "serwist";
@@ -13,7 +13,7 @@ declare const self: ServiceWorkerGlobalScope;
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
-  skipWaiting: true,
+  skipWaiting: false, // <-- QUAN TRỌNG: Đổi thành false để chờ người dùng bấm nút
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: defaultCache,

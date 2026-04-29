@@ -1,16 +1,14 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next';
+import './globals.css';
+import UpdatePrompt from '@/4_infrastructure/ui/components/gamefi-popups/UpdatePrompt'; // Thêm dòng này
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+export const viewport: Viewport = {
+  themeColor: '#0f172a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: 'Thói quen - QLTC',
@@ -18,7 +16,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
-    title: 'Thói quen - QLTC', // Dòng này ép iOS nhận đúng tên App khi tải về
+    title: 'Thói quen - QLTC',
     statusBarStyle: 'black-translucent',
   },
   icons: {
@@ -27,19 +25,22 @@ export const metadata: Metadata = {
   },
 };
 
-// ... Các dòng code export default function RootLayout bên dưới giữ nguyên
-
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="vi">
+      <body className="bg-slate-950 text-slate-50 antialiased">
+        {/* Khung mobile dọc bóp hẹp 2 bên (Quy tắc 5) */}
+        <main className="max-w-md mx-auto min-h-screen bg-slate-900 shadow-2xl overflow-x-hidden relative">
+          {children}
+        </main>
+        
+        {/* Pop-up cập nhật PWA nằm chờ sẵn */}
+        <UpdatePrompt />
+      </body>
     </html>
   );
 }
