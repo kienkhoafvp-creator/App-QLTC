@@ -1,0 +1,27 @@
+src/
+├── 1_domain/                   # TẦNG 1: THỰC THỂ LÕI (Core Entities)
+│   ├── models/                 # Định nghĩa cấu trúc dữ liệu. VD: Transaction.ts, Wallet.ts
+│   └── errors/                 # Định nghĩa các lỗi nghiệp vụ riêng. VD: InsufficientFundsError.ts
+│
+├── 2_use_cases/                # TẦNG 2: NGHIỆP VỤ (Application Business Rules)
+│   ├── transactions/           # Nhóm tính năng giao dịch. VD: CreateTransaction.ts
+│   ├── statistics/             # Nhóm tính năng thống kê. VD: GetMonthlyReport.ts
+│   └── interfaces/             # Các bản hợp đồng (Interface) yêu cầu Tầng 3 phải làm theo
+│
+├── 3_adapters/                 # TẦNG 3: CẦU NỐI (Interface Adapters)
+│   ├── repositories/           # Nơi trực tiếp gọi Supabase để lấy/lưu data thô. VD: SupabaseTransactionRepo.ts
+│   ├── controllers/            # Nơi nhận dữ liệu từ UI, kiểm tra tính hợp lệ rồi đẩy vào Tầng 2
+│   └── presenters/             # Chuyển đổi dữ liệu từ Tầng 2 thành định dạng dễ hiển thị cho UI (GameFi format)
+│
+└── 4_infrastructure/           # TẦNG 4: CÔNG NGHỆ BÊN NGOÀI (Frameworks & Drivers)
+    ├── database/               # Khởi tạo kết nối. VD: supabaseClient.ts
+    ├── ui/                     # Nguyên tắc 5 & 6 của bạn áp dụng 100% ở đây
+    │   ├── components/         # Các mảnh ghép UI:
+    │   │   ├── cards/          # Khung giao diện dạng thẻ (Card), bóp hẹp 2 bên
+    │   │   ├── gamefi-popups/  # Các Pop-up thay thế alert()
+    │   │   └── inputs/         # Các ô nhập liệu có tính năng phóng to khi bấm vào
+    │   └── layouts/            # Layout chính ép tỷ lệ khung hình thành Mobile dọc
+    └── app/                    # Cấu trúc Next.js App Router (Routing của Vercel)
+        ├── (auth)/             # Các trang đăng nhập/đăng ký
+        ├── dashboard/          # Màn hình chính
+        └── globals.css         # File CSS cấu hình Tailwind
