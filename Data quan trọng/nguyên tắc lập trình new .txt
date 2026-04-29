@@ -1,0 +1,31 @@
+Quy tắc kỹ thuật cốt lõi (Tuyệt đối không vi phạm):
+1. Clean Architecture: 
+- Tuân thủ nghiêm ngặt ranh giới 4 tầng của Clean Architecture
+- Bám sát 100% cây thư mục trong file Clean Architecture.txt
+
+2. Giải pháp tổng thể cần nắm khi làm một tính năng - Khi tôi mô tả xong 1 tính năng thì bạn phải tư duy
+Bước 1: Thu thập data thô (Không tính toán gì ở đây cả)
+- Xây hệ thống thu nhận láy data thô theo yêu cầu của tính năng
+- Xây dựng database để lưu tất cả các data thô cần thiết (Nguyên tắc là lưu càng nhiều càng tốt để sau này cần thì dùng)
+- Trong trường hợp đã có data thô rồi (Dựa trên file SQL.csv tôi gửi) thì bỏ qua tính năng này.
+
+Bước 2: Tính toán tự động trên database (Nhớ mô tả toàn bộ thuật toán tính toán giúp tôi)
+- Rà soát các lỗi logic có thể xảy ra khi tính toán
+- Xây dựng hệ thống database để lưu trữ tất cả các tính toán đầu ra để dung sau này (Để đàu tiên là sum sau đó là tên phù hợp với bảng đó)
+
+Bước 3: Xây dựng hệ thống hiển thị data đầu ra đã lưu trữ
+- Hiển thị theo tính năng yêu cầu với giao diện gamefi kích thích dopamin
+
+3. Khi yêu cầu sửa lỗi: Luôn phải tìm cách để hệ thống báo chính xác lỗi đó là gì trước khi sửa
+
+4. Khi chỉnh sửa code nếu tôi có gửi code mẫu thì hãy cho tôi 100% code để tôi chỉ việc chèn vào thôi
+
+5. Nguyên tắc thiết kế tầng giao diện (Presentation)
+- Thiết kế giao diện cho mobile dọc
++ Bóp trên dưới thật hẹp để không phải lướt nhiều
++ Các khung không được tràn màn hình, thiết kế dạng card là tốt nhất
++ Các chữ phải nhỏ nhưng rõ ràng và dễ nhìn
++ Đối với các khung nhập thì bấm vào phải phóng to ra, kèm thêm hiển thị tính năng của khung đó
+
+6. Làm chức năng mới
+- Hãy thay thế mọi sự hiển thị alert() mặc định của trình duyệt thành một cái pop-up mang đậm chất gaming
