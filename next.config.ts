@@ -10,6 +10,10 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Tắt luồng worker chạy ngầm để khắc phục triệt để lỗi tràn RAM "WorkerError" trên Vercel
+    webpackBuildWorker: false,
+  },
 };
 
 export default withSerwist(nextConfig);
