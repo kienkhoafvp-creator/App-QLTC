@@ -3,7 +3,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion"; // Thư viện tạo hiệu ứng gaming
 import { Wallet, ShieldCheck, Zap } from "lucide-react";
 import ZoomInput from "@/4_infrastructure/ui/components/inputs/ZoomInput";
@@ -11,7 +10,6 @@ import AlertPopup from "@/4_infrastructure/ui/components/gamefi-popups/AlertPopu
 import { AuthRepo } from "@/3_adapters/repositories/AuthRepo";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +30,12 @@ export default function LoginPage() {
         type: "success", 
         message: "HỆ THỐNG ĐÃ KẾT NỐI! Đang nạp dữ liệu tài chính..." 
       });
-      setTimeout(() => router.push("/dashboard"), 1500);
+      
+      // Sửa lỗi Logic: Dùng window.location.href để ép trình duyệt gửi Cookie mới qua Lính gác (Middleware)
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1500);
+
     } catch (error: any) {
       // Quy tắc 3: Báo lỗi chính xác
       setPopup({ isOpen: true, type: "error", message: `TRUY CẬP BỊ TỪ CHỐI: ${error.message}` });
