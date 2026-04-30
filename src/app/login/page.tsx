@@ -66,7 +66,8 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        {/* Thêm suppressHydrationWarning vào thẻ form để chặn cảnh báo từ browser extensions */}
+        <form onSubmit={handleLogin} className="space-y-4" suppressHydrationWarning>
           <div className="relative">
             <ZoomInput
               label="ĐỊNH DANH CHIẾN BINH"
@@ -92,7 +93,9 @@ export default function LoginPage() {
           </div>
 
           {/* Nút bấm Gaming với hiệu ứng nhấn (Dopamine) */}
+          {/* Thêm suppressHydrationWarning vào thẻ button để chặn cảnh báo từ trình quản lý mật khẩu */}
           <button
+            suppressHydrationWarning
             disabled={isLoading}
             type="submit"
             className="group relative w-full mt-4 overflow-hidden rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition-all hover:bg-blue-500 active:scale-95 shadow-[0_4px_0_rgb(29,78,216)] active:shadow-none active:translate-y-[4px]"

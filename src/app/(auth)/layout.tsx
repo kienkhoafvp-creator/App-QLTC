@@ -1,13 +1,32 @@
-// src/app/(auth)/layout.tsx
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+// src/app/layout.tsx
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+
+// Cấu hình Metadata cơ bản
+export const metadata: Metadata = {
+  title: "Hệ Thống Quản Lý GameFi",
+  description: "Trạm điều khiển dòng tiền chuyên nghiệp",
+};
+
+// Cấu hình chặn zoom trên Mobile (Quy tắc UI/UX bóp hẹp màn hình)
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-950 px-4">
-      {/* Khung Card bóp hẹp 2 bên */}
-      <div className="w-full max-w-sm bg-slate-900/80 backdrop-blur-md border border-slate-700/50 shadow-2xl rounded-3xl p-6 relative overflow-hidden">
-        {/* Vệt sáng trang trí */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-2 bg-blue-500 blur-sm"></div>
+    // suppressHydrationWarning ở html và body giúp bỏ qua lỗi do Extension trình duyệt gây ra
+    <html lang="vi" suppressHydrationWarning>
+      <body className="bg-slate-950 text-slate-200 antialiased" suppressHydrationWarning>
         {children}
-      </div>
-    </div>
+      </body>
+    </html>
   );
 }

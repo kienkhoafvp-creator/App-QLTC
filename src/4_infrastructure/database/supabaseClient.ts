@@ -1,14 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
+// src/4_infrastructure/database/supabaseClient.ts
+import { createBrowserClient } from '@supabase/ssr';
 
-export const supabase = createClient(
+// Sử dụng createBrowserClient thay cho createClient
+// Hàm này tự động cấu hình lưu thẻ xác thực (session) vào Cookies thay vì LocalStorage
+// Nhờ đó, Proxy (Middleware) trên Server có thể đọc được và cho phép đi vào Dashboard
+export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      persistSession: true,       // BẮT BUỘC: Lưu thông tin vào trình duyệt
-      autoRefreshToken: true,    // BẮT BUỘC: Tự động đổi vé mới khi vé cũ hết hạn
-      detectSessionInUrl: true,
-      storageKey: 'finance-app-v1' // Đặt tên cho "két sắt" trên trình duyệt của bạn
-    }
-  }
-)
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
