@@ -29,3 +29,5 @@ Bước 3: Xây dựng hệ thống hiển thị data đầu ra đã lưu trữ
 
 6. Làm chức năng mới
 - Hãy thay thế mọi sự hiển thị alert() mặc định của trình duyệt thành một cái pop-up mang đậm chất gaming
+
+7. Trước khi sửa code thì phải luôn yêu cầu các code cũ, không bao giờ được lấy code từ "bộ nhớ"
