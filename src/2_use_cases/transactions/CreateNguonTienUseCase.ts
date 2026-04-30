@@ -1,17 +1,21 @@
-import { NguonTienRepo } from "@/3_adapters/repositories/NguonTienRepo";
+import { supabase } from "@/4_infrastructure/database/supabaseClient";
 
 export class CreateNguonTienUseCase {
-  private repo: NguonTienRepo;
+  async execute(tenNguon: string, thuTu: number) {
+    if (!tenNguon.trim()) throw new Error("Tên nguồn tiền không được để trống.");
 
-  constructor() {
-    this.repo = new NguonTienRepo();
-  }
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) throw new Error("Chưa xác thực người dùng.");
 
-  async execute(tenNguon: string) {
-    if (!tenNguon || tenNguon.trim() === "") {
-      throw new Error("Tên nguồn tiền không được để rỗng!");
-    }
-    
-    return await this.repo.taoNguonTien(tenNguon.trim());
+    // Ghi thẳng xuống Database kèm theo số thứ tự
+    const { error } = await supabase
+      .from('nguon_tien')
+      .insert({ 
+        ten_nguon: tenNguon.trim(),
+        thu_tu: thuTu,
+        user_id: authData.user.id 
+      });
+
+    if (error) throw new Error(`Lỗi khởi tạo nguồn tiền: ${error.message}`);
   }
 }

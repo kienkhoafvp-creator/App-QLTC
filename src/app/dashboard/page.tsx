@@ -9,12 +9,14 @@ import NguonTien from "./nguontien";
 import NganSach from "./ngansach";
 import KhoanNo from "./khoanno";
 import GiaoDich from "./giaodich";
-import DieuChuyen from "./dieuchuyen"; // Component dạng Tab mới
+import DieuChuyen from "./dieuchuyen"; 
+import RutDuPhong from "./rutduphong"; 
+import GiaoDichDauTu from "./giaodichdautu"; // Import Tab Đầu Tư
 
 import { GetThongKeSoDuUseCase } from "@/2_use_cases/transactions/GetThongKeSoDuUseCase";
 
-// Thêm "dieuchuyen" vào TabState
-type TabState = "main" | "nguontien" | "ngansach" | "khoanno" | "giaodich" | "dieuchuyen";
+// Thêm "dautu" vào TabState
+type TabState = "main" | "nguontien" | "ngansach" | "khoanno" | "giaodich" | "dieuchuyen" | "rutduphong" | "dautu";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -72,12 +74,12 @@ export default function DashboardPage() {
     setPopup({ show: true, message: `Tính năng [${featureName}] đang được thợ rèn nâng cấp.` });
   };
 
-  // Hàm hứng kết quả từ Component Điều Chuyển
+  // Hàm hứng kết quả từ Component Điều Chuyển, Rút Quỹ, và Đầu Tư
   const handleTransferComplete = (message: string, isError: boolean = false) => {
     setPopup({ show: true, message });
     if (!isError) {
       fetchThongKe();
-      setActiveTab("main"); // Sau khi chuyển xong đẩy về màn Tổng quan cho đẹp
+      setActiveTab("main"); // Sau khi xử lý xong đẩy về màn Tổng quan cho đẹp
     }
   };
 
@@ -109,9 +111,10 @@ export default function DashboardPage() {
               </span>
             </button>
 
+            {/* Nút bật Tab Rút Dự Phòng */}
             <button 
-              onClick={() => showGameFiAlert("Nạp/Rút Dự Phòng")}
-              className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/40 rounded-xl py-1.5 shadow-[0_0_12px_rgba(245,158,11,0.15)] hover:bg-amber-500/20 active:scale-95 transition-all"
+              onClick={() => setActiveTab("rutduphong")}
+              className={`flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-amber-500/10 to-transparent border rounded-xl py-1.5 shadow-[0_0_12px_rgba(245,158,11,0.15)] hover:bg-amber-500/20 active:scale-95 transition-all ${activeTab === 'rutduphong' ? 'border-amber-400 bg-amber-500/20' : 'border-amber-500/40'}`}
             >
               <div className="flex items-center gap-1 mb-0.5">
                 <span className="text-[12px]">🛡️</span>
@@ -122,9 +125,10 @@ export default function DashboardPage() {
               </span>
             </button>
 
+            {/* Nút bật Tab Đầu Tư */}
             <button 
-              onClick={() => showGameFiAlert("Giao Dịch Đầu Tư")}
-              className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/40 rounded-xl py-1.5 shadow-[0_0_12px_rgba(59,130,246,0.15)] hover:bg-blue-500/20 active:scale-95 transition-all"
+              onClick={() => setActiveTab("dautu")}
+              className={`flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500/10 to-transparent border rounded-xl py-1.5 shadow-[0_0_12px_rgba(59,130,246,0.15)] hover:bg-blue-500/20 active:scale-95 transition-all ${activeTab === 'dautu' ? 'border-blue-400 bg-blue-500/20' : 'border-blue-500/40'}`}
             >
               <div className="flex items-center gap-1 mb-0.5">
                 <span className="text-[12px]">🚀</span>
@@ -158,6 +162,9 @@ export default function DashboardPage() {
           )}
           
           {activeTab === "dieuchuyen" && <DieuChuyen viTien={viTien} onComplete={handleTransferComplete} />}
+          {activeTab === "rutduphong" && <RutDuPhong quyDuPhong={quyDuPhong} onComplete={handleTransferComplete} />}
+          {activeTab === "dautu" && <GiaoDichDauTu quyDauTu={quyDauTu} onComplete={handleTransferComplete} />}
+          
           {activeTab === "nguontien" && <NguonTien />}
           {activeTab === "ngansach" && <NganSach />}
           {activeTab === "khoanno" && <KhoanNo />}
