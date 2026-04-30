@@ -20,4 +20,9 @@ export class NganSachRepo {
     
     return result as NganSach;
   }
+  async layDanhSachNganSach() {
+    const { data, error } = await supabase.from('ngan_sach').select('*').order('ngay_tao', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data;
+  }
 }

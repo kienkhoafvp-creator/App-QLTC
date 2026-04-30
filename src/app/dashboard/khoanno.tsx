@@ -6,17 +6,19 @@ import { GetNguonTienUseCase } from "@/2_use_cases/transactions/GetNguonTienUseC
 import { NguonTien } from "@/1_domain/models/NguonTien";
 
 export default function KhoanNo() {
+  const handleFormatCurrency = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
   const [tenKhoanNo, setTenKhoanNo] = useState("");
-  const [tongGocVay, setTongGocVay] = useState("");
-  const [tienTraDinhKy, setTienTraDinhKy] = useState("");
-  const [laiSuat, setLaiSuat] = useState("");
-  // Mặc định chọn Nợ tiêu dùng
+  const [tongGocVay, setTongGocVay] = useState(""); 
+  const [tongTienPhaiTra, setTongTienPhaiTra] = useState(""); // Đổi tên biến
   const [idNguonGanNo, setIdNguonGanNo] = useState("NO_TIEU_DUNG"); 
 
   const [isLoading, setIsLoading] = useState(false);
   const [nguonTienList, setNguonTienList] = useState<NguonTien[]>([]);
 
-  // Tự động kéo danh sách Nguồn Tiền từ DB khi mở Form
   useEffect(() => {
     const fetchNguonTien = async () => {
       try {
@@ -35,11 +37,17 @@ export default function KhoanNo() {
     setIsLoading(true);
 
     try {
+      const rawGocVay = tongGocVay.replace(/,/g, "");
+      const rawTienPhaiTra = tongTienPhaiTra.replace(/,/g, "");
+
+      const parsedGoc = parseFloat(rawGocVay);
+      // Xử lý thông minh: Nếu để trống Tổng tiền phải trả, tự động gán bằng Tiền gốc
+      const parsedTra = rawTienPhaiTra ? parseFloat(rawTienPhaiTra) : parsedGoc;
+
       const rawData = {
         ten_khoan_no: tenKhoanNo,
-        tong_goc_vay: parseFloat(tongGocVay),
-        tien_tra_dinh_ky: parseFloat(tienTraDinhKy),
-        lai_suat_percent: parseFloat(laiSuat),
+        tong_goc_vay: parsedGoc,
+        tong_tien_phai_tra: parsedTra,
         id_nguon_gan_no: idNguonGanNo
       };
 
@@ -48,11 +56,9 @@ export default function KhoanNo() {
 
       alert("🎉 TING! Đã khai báo thành công Khoản Nợ mới!");
       
-      // Reset form
       setTenKhoanNo("");
       setTongGocVay("");
-      setTienTraDinhKy("");
-      setLaiSuat("");
+      setTongTienPhaiTra("");
       setIdNguonGanNo("NO_TIEU_DUNG");
 
     } catch (error: any) {
@@ -86,39 +92,24 @@ export default function KhoanNo() {
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Gốc Vay (VNĐ) <span className="text-red-500">*</span></label>
               <input 
-                type="number" 
+                type="text" 
                 value={tongGocVay}
-                onChange={(e) => setTongGocVay(e.target.value)}
+                onChange={(e) => setTongGocVay(handleFormatCurrency(e.target.value))} 
                 placeholder="0" 
-                className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/50 focus:scale-[1.02] transition-all" 
+                className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/50 focus:scale-[1.02] transition-all text-right cursor-text" 
                 required 
                 disabled={isLoading}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiền Trả Định Kỳ (VNĐ) <span className="text-red-500">*</span></label>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Tiền Phải Trả (VNĐ)</label>
               <input 
-                type="number" 
-                value={tienTraDinhKy}
-                onChange={(e) => setTienTraDinhKy(e.target.value)}
-                placeholder="0" 
-                className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/50 focus:scale-[1.02] transition-all" 
-                required 
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Lãi Suất (%) <span className="text-red-500">*</span></label>
-              <input 
-                type="number" 
-                step="0.01" 
-                value={laiSuat}
-                onChange={(e) => setLaiSuat(e.target.value)}
-                placeholder="0.0" 
-                className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/50 focus:scale-[1.02] transition-all" 
-                required 
+                type="text" 
+                value={tongTienPhaiTra}
+                onChange={(e) => setTongTienPhaiTra(handleFormatCurrency(e.target.value))} 
+                placeholder="0 (Nếu vay không lãi thì để trống)" 
+                className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/50 focus:scale-[1.02] transition-all text-right cursor-text" 
                 disabled={isLoading}
               />
             </div>
@@ -128,13 +119,10 @@ export default function KhoanNo() {
               <select 
                 value={idNguonGanNo}
                 onChange={(e) => setIdNguonGanNo(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/50 focus:scale-[1.02] transition-all"
+                className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/50 focus:scale-[1.02] transition-all cursor-pointer"
                 disabled={isLoading}
               >
-                {/* Tùy chọn tĩnh cho Nợ Tiêu Dùng */}
                 <option value="NO_TIEU_DUNG">💳 Nợ tiêu dùng</option>
-                
-                {/* Đổ dữ liệu Nguồn Tiền từ DB ra */}
                 {nguonTienList.map((nguon) => (
                   <option key={nguon.id} value={nguon.id}>
                     🏦 {nguon.ten_nguon}

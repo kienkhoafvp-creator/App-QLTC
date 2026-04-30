@@ -4,7 +4,6 @@ import { useState } from "react";
 import { CreateNganSachUseCase } from "@/2_use_cases/transactions/CreateNganSachUseCase";
 
 export default function NganSach() {
-  // Hàm phụ trợ lấy ngày hôm nay theo định dạng chuẩn YYYY-MM-DD
   const getTodayDateString = () => {
     const today = new Date();
     const offset = today.getTimezoneOffset() * 60000;
@@ -12,8 +11,14 @@ export default function NganSach() {
     return localISOTime;
   };
 
+  // Hàm xử lý định dạng tiền tệ (Thêm dấu phẩy)
+  const handleFormatCurrency = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
   const [tenNganSach, setTenNganSach] = useState("");
-  const [dinhMuc, setDinhMuc] = useState("");
+  const [dinhMuc, setDinhMuc] = useState(""); // Giữ dưới dạng chuỗi
   const [thoiGianBatDau, setThoiGianBatDau] = useState(getTodayDateString());
   const [thoiGianKetThuc, setThoiGianKetThuc] = useState("");
   
@@ -24,9 +29,12 @@ export default function NganSach() {
     setIsLoading(true);
 
     try {
+      // Làm sạch chuỗi: Loại bỏ dấu phẩy trước khi đẩy xuống Tầng 2
+      const rawDinhMuc = dinhMuc.replace(/,/g, "");
+
       const rawData = {
         ten_ngan_sach: tenNganSach,
-        dinh_muc: parseFloat(dinhMuc),
+        dinh_muc: parseFloat(rawDinhMuc), // Parse chuỗi đã làm sạch thành số
         thoi_gian_bat_dau: thoiGianBatDau,
         thoi_gian_ket_thuc: thoiGianKetThuc
       };
@@ -73,11 +81,11 @@ export default function NganSach() {
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Định Mức (VNĐ) <span className="text-red-500">*</span></label>
               <input 
-                type="number" 
+                type="text" // Chuyển sang text
                 value={dinhMuc}
-                onChange={(e) => setDinhMuc(e.target.value)}
+                onChange={(e) => setDinhMuc(handleFormatCurrency(e.target.value))} // Áp dụng Formatter
                 placeholder="0" 
-                className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/50 focus:scale-[1.02] transition-all cursor-text" 
+                className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/50 focus:scale-[1.02] transition-all cursor-text text-right" 
                 required 
                 disabled={isLoading}
               />

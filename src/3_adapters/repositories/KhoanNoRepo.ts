@@ -12,4 +12,10 @@ export class KhoanNoRepo {
     if (error) throw new Error(error.message);
     return result as KhoanNo;
   }
+  // Thêm hàm này vào class KhoanNoRepo
+  async layDanhSachKhoanNo() {
+    const { data, error } = await supabase.from('khoan_no').select('*').order('ngay_tao', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data;
+  }
 }
