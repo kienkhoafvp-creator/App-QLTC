@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/4_infrastructure/database/supabaseClient";
 import { CreateNganSachUseCase } from "@/2_use_cases/transactions/CreateNganSachUseCase";
 import { GetThongKeNganSachUseCase } from "@/2_use_cases/transactions/GetThongKeNganSachUseCase";
 import { GetChiTietNganSachUseCase } from "@/2_use_cases/transactions/GetChiTietNganSachUseCase";
 import { UpdateDinhMucNganSachUseCase } from "@/2_use_cases/transactions/UpdateDinhMucNganSachUseCase";
+import { ResetNganSachUseCase } from "@/2_use_cases/transactions/ResetNganSachUseCase";
 
 export default function NganSach() {
   const getTodayDateString = () => {
@@ -26,7 +27,15 @@ export default function NganSach() {
     return date.toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  // Form States
+  const kiemTraHetHan = (ngayKetThuc: string) => {
+    if (!ngayKetThuc) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const end = new Date(ngayKetThuc);
+    end.setHours(0, 0, 0, 0);
+    return today >= end;
+  };
+
   const [tenNganSach, setTenNganSach] = useState("");
   const [dinhMuc, setDinhMuc] = useState(""); 
   const [thoiGianBatDau, setThoiGianBatDau] = useState(getTodayDateString());
@@ -34,23 +43,22 @@ export default function NganSach() {
   const [thuTuInput, setThuTuInput] = useState<number | "">("");
   const [isLoading, setIsLoading] = useState(false);
   
-  // List & Detail States
-  const [danhSachNganSach, setDanhSachNganSach] = useState<any[]>([]);
+  const [danhSachNganSachToanBo, setDanhSachNganSachToanBo] = useState<any[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [chiTietGiaoDich, setChiTietGiaoDich] = useState<Record<string, any[]>>({});
   const [isLoadingChiTiet, setIsLoadingChiTiet] = useState(false);
 
-  // Quick Edit States
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
+  const [resetModalData, setResetModalData] = useState<any | null>(null);
   const [popup, setPopup] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
 
   const fetchThongKeNganSach = useCallback(async () => {
     try {
       const useCase = new GetThongKeNganSachUseCase();
       const data = await useCase.execute();
-      setDanhSachNganSach(data);
+      setDanhSachNganSachToanBo(data);
     } catch (error) {
       console.error("Lỗi khi tải thống kê:", error);
     }
@@ -60,16 +68,37 @@ export default function NganSach() {
     fetchThongKeNganSach();
   }, [fetchThongKeNganSach]);
 
+  const danhSachNganSachActive = useMemo(() => {
+    return danhSachNganSachToanBo.filter(ns => ns.trang_thai_xac_thuc !== true);
+  }, [danhSachNganSachToanBo]);
+
   useEffect(() => {
-    setThuTuInput(danhSachNganSach.length + 1);
-  }, [danhSachNganSach]);
+    setThuTuInput(danhSachNganSachActive.length + 1);
+  }, [danhSachNganSachActive]);
+
+  const nganSachThang = useMemo(() => {
+    let tongNganSachNgay = 0;
+    danhSachNganSachActive.forEach(ns => {
+      if (ns.thoi_gian_bat_dau && ns.thoi_gian_ket_thuc && ns.dinh_muc) {
+        const start = new Date(ns.thoi_gian_bat_dau);
+        const end = new Date(ns.thoi_gian_ket_thuc);
+        const diffTime = end.getTime() - start.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+        if (diffDays > 0) {
+          tongNganSachNgay += Number(ns.dinh_muc) / diffDays;
+        }
+      }
+    });
+    return Math.round(tongNganSachNgay * 30);
+  }, [danhSachNganSachActive]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       const rawDinhMuc = dinhMuc.replace(/,/g, "");
-      const finalThuTu = thuTuInput !== "" ? Number(thuTuInput) - 1 : danhSachNganSach.length;
+      const finalThuTu = thuTuInput !== "" ? Number(thuTuInput) - 1 : danhSachNganSachActive.length;
       const rawData = {
         ten_ngan_sach: tenNganSach,
         dinh_muc: parseFloat(rawDinhMuc), 
@@ -88,9 +117,8 @@ export default function NganSach() {
     }
   };
 
-  // --- Logic Chỉnh sửa nhanh ---
   const handleStartEdit = (e: React.MouseEvent, ns: any) => {
-    e.stopPropagation(); // Không cho thẻ xổ xuống khi bấm vào nút sửa
+    e.stopPropagation(); 
     setEditingId(ns.ngan_sach_id);
     setEditValue(ns.dinh_muc.toString());
   };
@@ -109,7 +137,7 @@ export default function NganSach() {
   };
 
   const handleToggleExpand = async (idNganSach: string) => {
-    if (editingId) return; // Không cho xổ khi đang trong chế độ sửa
+    if (editingId) return; 
     if (expandedId === idNganSach) { setExpandedId(null); return; }
     setExpandedId(idNganSach);
 
@@ -125,69 +153,137 @@ export default function NganSach() {
 
   const handleMove = async (index: number, direction: 'up' | 'down') => {
     if (direction === 'up' && index === 0) return;
-    if (direction === 'down' && index === danhSachNganSach.length - 1) return;
-    const _danhSach = [...danhSachNganSach];
+    if (direction === 'down' && index === danhSachNganSachActive.length - 1) return;
+    const _danhSach = [...danhSachNganSachActive];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     const temp = _danhSach[index];
     _danhSach[index] = _danhSach[targetIndex];
     _danhSach[targetIndex] = temp;
-    setDanhSachNganSach(_danhSach);
+    
+    setDanhSachNganSachToanBo(prevList => {
+      const newList = [...prevList];
+      const i1 = newList.findIndex(item => item.ngan_sach_id === _danhSach[index].ngan_sach_id);
+      const i2 = newList.findIndex(item => item.ngan_sach_id === _danhSach[targetIndex].ngan_sach_id);
+      if(i1 !== -1) newList[i1] = _danhSach[index];
+      if(i2 !== -1) newList[i2] = _danhSach[targetIndex];
+      return newList;
+    });
+
     try {
       const updates = _danhSach.map((item, idx) => ({ id: item.ngan_sach_id, thu_tu: idx }));
       await supabase.rpc('cap_nhat_thu_tu_ngan_sach', { p_data: updates });
     } catch (error) { console.error(error); }
   };
 
+  const handleMocReset = (e: React.MouseEvent, ns: any) => {
+    e.stopPropagation();
+    if (kiemTraHetHan(ns.thoi_gian_ket_thuc)) {
+      setResetModalData({
+        idCu: ns.ngan_sach_id,
+        ten_ngan_sach: ns.ten_ngan_sach,
+        dinh_muc: ns.dinh_muc.toString(),
+        thoi_gian_bat_dau: getTodayDateString(),
+        thoi_gian_ket_thuc: "",
+        thu_tu: ns.thu_tu 
+      });
+    }
+  };
+
+  const submitReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetModalData) return;
+    setIsLoading(true);
+    try {
+      const useCase = new ResetNganSachUseCase();
+      const rawDinhMuc = resetModalData.dinh_muc.replace(/,/g, "");
+      
+      await useCase.execute(
+        resetModalData.idCu,
+        {
+          ten_ngan_sach: resetModalData.ten_ngan_sach,
+          dinh_muc: parseFloat(rawDinhMuc),
+          thoi_gian_bat_dau: resetModalData.thoi_gian_bat_dau,
+          thoi_gian_ket_thuc: resetModalData.thoi_gian_ket_thuc
+        },
+        resetModalData.thu_tu
+      );
+
+      setPopup({ show: true, message: "⚡ Đã tái sinh Ngân Sách thành công!" });
+      setResetModalData(null);
+      fetchThongKeNganSach();
+    } catch (error: any) {
+      setPopup({ show: true, message: `⚠️ Lỗi: ${error.message}` });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-300 relative">
-      <div className="p-3 bg-slate-800 border-b border-amber-500/30 text-center shadow-md flex-shrink-0">
-        <h1 className="text-amber-400 font-black uppercase tracking-widest text-sm">Xưởng Ngân Sách</h1>
+      
+      {/* HEADER NÂNG CẤP 1 & 2: Căn giữa, gộp chung Ngân Sách Tháng (Số tiền) */}
+      <div className="p-3 bg-slate-800 border-b border-amber-500/30 shadow-md flex-shrink-0 flex items-center justify-center">
+        <h1 className="text-amber-400 font-black uppercase tracking-widest text-sm whitespace-nowrap">
+          Ngân Sách Tháng ({handleFormatCurrency(nganSachThang)})
+        </h1>
       </div>
 
       <div className="p-3 space-y-4 overflow-y-auto pb-24 flex-1">
-        
         {/* KHUNG TẠO MỚI */}
         <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-3 shadow-sm">
           <form onSubmit={handleSave} className="space-y-3">
             <div className="flex gap-2 items-center">
-              <input type="number" value={thuTuInput} onChange={(e) => setThuTuInput(e.target.value ? Number(e.target.value) : "")} className="w-12 bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-center font-black text-slate-400 focus:border-amber-500 transition-all" required min="1" disabled={isLoading} />
-              <input type="text" value={tenNganSach} onChange={(e) => setTenNganSach(e.target.value)} placeholder="Tên ngân sách mới..." className="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white focus:border-amber-500 transition-all" required disabled={isLoading} />
+              <input type="number" value={thuTuInput} onChange={(e) => setThuTuInput(e.target.value ? Number(e.target.value) : "")} className="w-12 bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-center font-black text-slate-400 focus:border-amber-500 transition-all focus:scale-105" required min="1" disabled={isLoading} />
+              <input type="text" value={tenNganSach} onChange={(e) => setTenNganSach(e.target.value)} placeholder="Tên ngân sách mới..." className="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white focus:border-amber-500 transition-all focus:scale-105 origin-left" required disabled={isLoading} />
             </div>
-            <input type="text" value={dinhMuc} onChange={(e) => setDinhMuc(handleFormatCurrency(e.target.value))} placeholder="Định mức (VNĐ)" className="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-amber-300 font-black text-right" required disabled={isLoading} />
+            <input type="text" value={dinhMuc} onChange={(e) => setDinhMuc(handleFormatCurrency(e.target.value))} placeholder="Định mức (VNĐ)" className="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-amber-300 font-black text-right focus:border-amber-500 transition-all focus:scale-105" required disabled={isLoading} />
             <div className="flex gap-2">
-              <input type="date" value={thoiGianBatDau} onChange={(e) => setThoiGianBatDau(e.target.value)} className="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-slate-300" required />
-              <input type="date" value={thoiGianKetThuc} min={thoiGianBatDau} onChange={(e) => setThoiGianKetThuc(e.target.value)} className="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-amber-400 font-bold" required />
+              <input type="date" value={thoiGianBatDau} onChange={(e) => setThoiGianBatDau(e.target.value)} className="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-slate-300 focus:scale-105 transition-transform" required />
+              <input type="date" value={thoiGianKetThuc} min={thoiGianBatDau} onChange={(e) => setThoiGianKetThuc(e.target.value)} className="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-amber-400 font-bold focus:scale-105 transition-transform" required />
             </div>
-            <button type="submit" disabled={isLoading} className="w-full bg-amber-500 text-slate-900 font-black py-2.5 rounded-lg uppercase text-xs tracking-widest active:scale-95 transition-all">{isLoading ? "..." : "＋ Bơm Ngân Sách"}</button>
+            <button type="submit" disabled={isLoading} className="w-full bg-amber-500 text-slate-900 font-black py-2.5 rounded-lg uppercase text-xs tracking-widest active:scale-95 transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)]">{isLoading ? "..." : "＋ Bơm Ngân Sách"}</button>
           </form>
         </div>
 
         {/* DANH SÁCH */}
         <div className="space-y-2">
-          {danhSachNganSach.map((ns, index) => {
+          {danhSachNganSachActive.map((ns, index) => {
             const isExpanded = expandedId === ns.ngan_sach_id;
             const isEditing = editingId === ns.ngan_sach_id;
             const chiTiet = chiTietGiaoDich[ns.ngan_sach_id];
+            const isExpired = kiemTraHetHan(ns.thoi_gian_ket_thuc);
 
             return (
-              <div key={ns.ngan_sach_id} className="bg-slate-900 border border-slate-700/80 rounded-xl overflow-hidden flex flex-col">
+              <div key={ns.ngan_sach_id} className="bg-slate-900 border border-slate-700/80 rounded-xl overflow-hidden flex flex-col shadow-sm">
                 <div className="flex items-stretch w-full">
                   <div className="flex flex-col items-center justify-center bg-slate-800 border-r border-slate-700/50 w-10 shrink-0">
-                    <button onClick={(e) => { e.stopPropagation(); handleMove(index, 'up'); }} disabled={index === 0} className="flex-1 w-full text-slate-500 hover:text-emerald-400 disabled:opacity-20 transition-all">▲</button>
-                    <button onClick={(e) => { e.stopPropagation(); handleMove(index, 'down'); }} disabled={index === danhSachNganSach.length - 1} className="flex-1 w-full text-slate-500 hover:text-orange-400 disabled:opacity-20 transition-all">▼</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleMove(index, 'up'); }} disabled={index === 0} className="flex-1 w-full text-slate-500 hover:text-emerald-400 disabled:opacity-20 transition-all text-xs">▲</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleMove(index, 'down'); }} disabled={index === danhSachNganSachActive.length - 1} className="flex-1 w-full text-slate-500 hover:text-orange-400 disabled:opacity-20 transition-all text-xs">▼</button>
                   </div>
 
                   <div onClick={() => handleToggleExpand(ns.ngan_sach_id)} className="flex-1 flex flex-col p-3 cursor-pointer hover:bg-slate-800/50 transition-colors">
                     <div className="flex justify-between items-start mb-1">
-                      <div className="flex items-center gap-2">
+                      
+                      <div 
+                        className={`flex items-center gap-2 ${isExpired ? "cursor-pointer group" : ""}`}
+                        onClick={(e) => isExpired && handleMocReset(e, ns)}
+                      >
                         <span className="text-xs font-black text-slate-600 w-3">{index + 1}.</span>
-                        <span className="font-black text-amber-400 text-sm uppercase truncate">{ns.ten_ngan_sach}</span>
+                        {isExpired ? (
+                          <span className="font-black text-red-400 text-sm uppercase truncate group-hover:text-red-300 animate-pulse transition-colors" title="Bấm để thiết lập lại chu kỳ mới">
+                            ⚠️ {ns.ten_ngan_sach}
+                          </span>
+                        ) : (
+                          <span className="font-black text-amber-400 text-sm uppercase truncate">{ns.ten_ngan_sach}</span>
+                        )}
                       </div>
-                      <span className="text-[9px] font-bold text-amber-500 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Hạn: {handleFormatDate(ns.thoi_gian_ket_thuc)}</span>
+
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ml-2 ${isExpired ? 'text-red-400 bg-red-950/30 border-red-900/50' : 'text-amber-500 bg-slate-800 border-slate-700'}`}>
+                        Hạn: {handleFormatDate(ns.thoi_gian_ket_thuc)}
+                      </span>
                     </div>
 
                     <div className="flex justify-between items-end mt-1.5 pl-5">
-                      {/* --- Vùng Sửa Định Mức --- */}
                       <div className="flex flex-col group" onClick={(e) => handleStartEdit(e, ns)}>
                         <span className="text-[9px] text-slate-500 font-bold uppercase group-hover:text-amber-500 transition-colors">Định mức ✎</span>
                         {isEditing ? (
@@ -213,23 +309,26 @@ export default function NganSach() {
                   </div>
                 </div>
 
-                {/* --- Vùng Xổ Chi Tiết --- */}
+                {/* VÙNG XỔ CHI TIẾT ĐƯỢC NÂNG CẤP GIAO DIỆN (Nâng cấp 3 & 4) */}
                 {isExpanded && (
                   <div className="p-2 border-t border-slate-800 bg-slate-950/80 animate-in slide-in-from-top-2 duration-200">
                     <h4 className="text-[10px] font-black text-orange-500 uppercase mb-2 text-center tracking-widest border-b border-orange-500/20 pb-1">Lịch sử xuất quỹ</h4>
-                    <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                       {isLoadingChiTiet ? (
-                        <p className="text-[10px] text-slate-500 text-center py-2 italic">Đang tải chi tiết...</p>
+                        <p className="text-xs text-slate-500 text-center py-2 italic">Đang tải chi tiết...</p>
                       ) : chiTiet?.length === 0 ? (
-                        <p className="text-[10px] text-slate-500 text-center py-2 italic">Chưa có giao dịch.</p>
+                        <p className="text-xs text-slate-500 text-center py-2 italic">Chưa có giao dịch.</p>
                       ) : (
                         chiTiet?.map(c => (
-                          <div key={c.id} className="flex justify-between items-center bg-slate-800/80 px-2 py-1.5 rounded border border-slate-700/50 text-[10px]">
-                            <div className="flex items-center gap-2 overflow-hidden mr-2">
-                              <span className="font-bold text-slate-300 truncate max-w-[80px]">{c.ly_do_chi}</span>
-                              <span className="text-[8px] font-medium text-amber-500/70 truncate shrink-0">👤 {c.nguoi_chi}</span>
-                            </div>
-                            <span className="text-orange-400 font-black shrink-0">-{handleFormatCurrency(c.so_tien)}</span>
+                          <div key={c.id} className="flex justify-between items-start bg-slate-800/80 px-2 py-2 rounded border border-slate-700/50 text-sm gap-3">
+                            {/* Người chi ở vị trí bên cùng bên trái, font-size đồng bộ text-sm */}
+                            <span className="font-medium text-amber-500/80 shrink-0 whitespace-nowrap pt-0.5 w-14">👤 {c.nguoi_chi}</span>
+                            
+                            {/* Lý do chi: bỏ truncate, thêm break-words để tự xuống dòng, chiếm phần không gian trống */}
+                            <span className="font-bold text-slate-300 flex-1 whitespace-normal break-words leading-tight pt-0.5">{c.ly_do_chi}</span>
+                            
+                            {/* Số tiền nằm bên phải */}
+                            <span className="text-orange-400 font-black shrink-0 pt-0.5">-{handleFormatCurrency(c.so_tien)}</span>
                           </div>
                         ))
                       )}
@@ -241,6 +340,52 @@ export default function NganSach() {
           })}
         </div>
       </div>
+
+      {/* POPUP RESET NGÂN SÁCH (GAMEFI STYLE) */}
+      {resetModalData && (
+        <div className="absolute inset-0 z-[60] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+          <div className="w-full max-w-sm bg-slate-900 border border-cyan-500/50 rounded-2xl p-5 shadow-[0_0_50px_rgba(6,182,212,0.15)] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+            
+            <h3 className="text-lg font-black text-cyan-400 mb-1 uppercase tracking-widest text-center">Tái Sinh Ngân Sách</h3>
+            <p className="text-[10px] text-slate-400 text-center mb-5 uppercase tracking-wide">Chu kỳ mới - Dữ liệu cũ được lưu lịch sử</p>
+
+            <form onSubmit={submitReset} className="space-y-4">
+              <div>
+                <label className="text-[10px] text-cyan-500 font-bold uppercase ml-1">Tên Ngân Sách (Đã Khóa)</label>
+                <input type="text" value={resetModalData.ten_ngan_sach} disabled className="w-full bg-slate-950/50 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-500 font-bold mt-1 cursor-not-allowed" />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-cyan-500 font-bold uppercase ml-1">Định Mức Mới (VNĐ)</label>
+                <input 
+                  type="text" 
+                  value={handleFormatCurrency(resetModalData.dinh_muc)} 
+                  onChange={(e) => setResetModalData({...resetModalData, dinh_muc: e.target.value})} 
+                  className="w-full bg-slate-900 border border-cyan-700 rounded-lg p-2.5 text-lg text-cyan-300 font-black text-right focus:border-cyan-400 transition-all mt-1" 
+                  required 
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-[10px] text-cyan-500 font-bold uppercase ml-1">Bắt Đầu</label>
+                  <input type="date" value={resetModalData.thoi_gian_bat_dau} onChange={(e) => setResetModalData({...resetModalData, thoi_gian_bat_dau: e.target.value})} className="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs text-slate-300 mt-1" required />
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] text-cyan-500 font-bold uppercase ml-1">Kết Thúc</label>
+                  <input type="date" value={resetModalData.thoi_gian_ket_thuc} min={resetModalData.thoi_gian_bat_dau} onChange={(e) => setResetModalData({...resetModalData, thoi_gian_ket_thuc: e.target.value})} className="w-full bg-slate-900 border border-cyan-600 rounded-lg p-2 text-xs text-cyan-400 font-bold mt-1 shadow-[0_0_10px_rgba(6,182,212,0.1)]" required />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button type="button" onClick={() => setResetModalData(null)} className="flex-1 bg-slate-800 text-slate-400 font-bold py-2.5 rounded-xl text-xs uppercase hover:bg-slate-700 transition-all">Hủy</button>
+                <button type="submit" disabled={isLoading} className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg">{isLoading ? "Đang chạy..." : "Xác Nhận"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* POPUP TRẠM THÔNG BÁO */}
       {popup.show && (

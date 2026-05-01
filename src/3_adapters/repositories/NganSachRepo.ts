@@ -10,7 +10,7 @@ export class NganSachRepo {
         dinh_muc: data.dinh_muc,
         thoi_gian_bat_dau: data.thoi_gian_bat_dau,
         thoi_gian_ket_thuc: data.thoi_gian_ket_thuc,
-        thu_tu: data.thu_tu // Đã bổ sung trường thứ tự
+        thu_tu: data.thu_tu
       }])
       .select()
       .single();
@@ -19,7 +19,6 @@ export class NganSachRepo {
     return result as NganSach;
   }
 
-  // HÀM MỚI: Cập nhật định mức
   async capNhatDinhMuc(id: string, dinhMucMoi: number): Promise<void> {
     const { error } = await supabase
       .from('ngan_sach')
@@ -29,11 +28,21 @@ export class NganSachRepo {
     if (error) throw new Error(`Lỗi cập nhật định mức: ${error.message}`);
   }
 
+  // HÀM MỚI: Khóa ngân sách cũ lại để đưa vào lịch sử
+  async dongNganSach(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('ngan_sach')
+      .update({ trang_thai_xac_thuc: true })
+      .eq('id', id);
+
+    if (error) throw new Error(`Lỗi đóng ngân sách: ${error.message}`);
+  }
+
   async layDanhSachNganSach() {
     const { data, error } = await supabase
       .from('ngan_sach')
       .select('*')
-      .order('thu_tu', { ascending: true }); // Sắp xếp theo thứ tự ưu tiên
+      .order('thu_tu', { ascending: true }); 
     if (error) throw new Error(error.message);
     return data;
   }
