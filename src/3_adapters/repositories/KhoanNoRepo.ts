@@ -5,16 +5,26 @@ export class KhoanNoRepo {
   async taoKhoanNo(data: KhoanNo): Promise<KhoanNo> {
     const { data: result, error } = await supabase
       .from('khoan_no')
-      .insert([data])
+      .insert([{
+        ten_khoan_no: data.ten_khoan_no,
+        tong_goc_vay: data.tong_goc_vay,
+        tong_tien_phai_tra: data.tong_tien_phai_tra,
+        id_nguon_gan_no: data.id_nguon_gan_no,
+        thu_tu: data.thu_tu // Đẩy thứ tự lên database
+      }])
       .select()
       .single();
 
     if (error) throw new Error(error.message);
     return result as KhoanNo;
   }
-  // Thêm hàm này vào class KhoanNoRepo
+
+  // Khuyến nghị: Hàm này đang thừa, nên cân nhắc xóa bỏ
   async layDanhSachKhoanNo() {
-    const { data, error } = await supabase.from('khoan_no').select('*').order('ngay_tao', { ascending: false });
+    const { data, error } = await supabase
+      .from('khoan_no')
+      .select('*')
+      .order('thu_tu', { ascending: true }); // Sắp xếp theo thứ tự
     if (error) throw new Error(error.message);
     return data;
   }

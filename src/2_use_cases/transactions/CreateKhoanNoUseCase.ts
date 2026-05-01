@@ -7,7 +7,8 @@ export class CreateKhoanNoUseCase {
     this.repo = new KhoanNoRepo();
   }
 
-  async execute(raw_data: { ten_khoan_no: string; tong_goc_vay: number; tong_tien_phai_tra: number; id_nguon_gan_no: string }) {
+  // Bổ sung tham số thuTu vào hàm execute
+  async execute(raw_data: { ten_khoan_no: string; tong_goc_vay: number; tong_tien_phai_tra: number; id_nguon_gan_no: string }, thuTu: number) {
     if (raw_data.tong_goc_vay <= 0) throw new Error("Tổng gốc vay phải lớn hơn 0");
     if (raw_data.tong_tien_phai_tra < raw_data.tong_goc_vay) throw new Error("Lỗi: Tổng tiền phải trả không được nhỏ hơn Gốc vay ban đầu.");
 
@@ -15,7 +16,8 @@ export class CreateKhoanNoUseCase {
       ten_khoan_no: raw_data.ten_khoan_no.trim(),
       tong_goc_vay: raw_data.tong_goc_vay,
       tong_tien_phai_tra: raw_data.tong_tien_phai_tra,
-      id_nguon_gan_no: raw_data.id_nguon_gan_no
+      id_nguon_gan_no: raw_data.id_nguon_gan_no,
+      thu_tu: thuTu // Truyền thứ tự sang Repo
     };
 
     return await this.repo.taoKhoanNo(cleanData);
