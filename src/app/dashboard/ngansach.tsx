@@ -7,7 +7,7 @@ import { GetThongKeNganSachUseCase } from "@/2_use_cases/transactions/GetThongKe
 import { GetChiTietNganSachUseCase } from "@/2_use_cases/transactions/GetChiTietNganSachUseCase";
 import { UpdateDinhMucNganSachUseCase } from "@/2_use_cases/transactions/UpdateDinhMucNganSachUseCase";
 import { ResetNganSachUseCase } from "@/2_use_cases/transactions/ResetNganSachUseCase";
-import { DeleteNganSachUseCase } from "@/2_use_cases/transactions/DeleteNganSachUseCase"; // Import UseCase Xóa
+import { DeleteNganSachUseCase } from "@/2_use_cases/transactions/DeleteNganSachUseCase";
 
 export default function NganSach() {
   const getTodayDateString = () => {
@@ -53,7 +53,6 @@ export default function NganSach() {
   const [editValue, setEditValue] = useState("");
 
   const [resetModalData, setResetModalData] = useState<any | null>(null);
-  // State quản lý Modal Xóa
   const [xoaModalData, setXoaModalData] = useState<{ id: string, ten: string } | null>(null);
   const [popup, setPopup] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
 
@@ -154,28 +153,44 @@ export default function NganSach() {
     }
   };
 
+  // ĐÃ FIX: Logic trượt tức thời (Real-time Optimistic Update)
   const handleMove = async (index: number, direction: 'up' | 'down') => {
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === danhSachNganSachActive.length - 1) return;
+    
     const _danhSach = [...danhSachNganSachActive];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    const temp = _danhSach[index];
-    _danhSach[index] = _danhSach[targetIndex];
-    _danhSach[targetIndex] = temp;
     
+    // Ghi nhớ 2 phần tử cần tráo đổi trước khi thay đổi mảng
+    const itemA = _danhSach[index];
+    const itemB = _danhSach[targetIndex];
+
+    // Tráo đổi trên mảng Active nội bộ
+    _danhSach[index] = itemB;
+    _danhSach[targetIndex] = itemA;
+    
+    // Cập nhật State tức thì để React vẽ lại (Real-time jump)
     setDanhSachNganSachToanBo(prevList => {
       const newList = [...prevList];
-      const i1 = newList.findIndex(item => item.ngan_sach_id === _danhSach[index].ngan_sach_id);
-      const i2 = newList.findIndex(item => item.ngan_sach_id === _danhSach[targetIndex].ngan_sach_id);
-      if(i1 !== -1) newList[i1] = _danhSach[index];
-      if(i2 !== -1) newList[i2] = _danhSach[targetIndex];
+      const idxA = newList.findIndex(item => item.ngan_sach_id === itemA.ngan_sach_id);
+      const idxB = newList.findIndex(item => item.ngan_sach_id === itemB.ngan_sach_id);
+      
+      if(idxA !== -1 && idxB !== -1) {
+        newList[idxA] = itemB;
+        newList[idxB] = itemA;
+      }
       return newList;
     });
 
+    // Bắn dữ liệu xuống Database ở nền
     try {
       const updates = _danhSach.map((item, idx) => ({ id: item.ngan_sach_id, thu_tu: idx }));
       await supabase.rpc('cap_nhat_thu_tu_ngan_sach', { p_data: updates });
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+      console.error(error); 
+      // Nếu DB lỗi, bắt nó tải lại để khôi phục trạng thái chuẩn
+      fetchThongKeNganSach();
+    }
   };
 
   const handleMocReset = (e: React.MouseEvent, ns: any) => {
@@ -221,7 +236,6 @@ export default function NganSach() {
     }
   };
 
-  // Logic gọi UseCase Xóa
   const submitXoa = async () => {
     if (!xoaModalData) return;
     setIsLoading(true);
@@ -231,7 +245,7 @@ export default function NganSach() {
 
       setPopup({ show: true, message: "🔥 Đã thiêu rụi Ngân Sách thành công!" });
       setXoaModalData(null);
-      fetchThongKeNganSach(); // Cập nhật lại danh sách
+      fetchThongKeNganSach(); 
     } catch (error: any) {
       setXoaModalData(null); 
       setPopup({ show: true, message: `⚠️ Cảnh Báo: ${error.message}` });
@@ -299,7 +313,6 @@ export default function NganSach() {
                         )}
                       </div>
 
-                      {/* Gắn nút thùng rác ngay cạnh badge ngày tháng */}
                       <div className="flex items-center gap-2">
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ${isExpired ? 'text-red-400 bg-red-950/30 border-red-900/50' : 'text-amber-500 bg-slate-800 border-slate-700'}`}>
                           Hạn: {handleFormatDate(ns.thoi_gian_ket_thuc)}
@@ -314,9 +327,12 @@ export default function NganSach() {
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-end mt-1.5 pl-5">
-                      <div className="flex flex-col group" onClick={(e) => handleStartEdit(e, ns)}>
-                        <span className="text-[9px] text-slate-500 font-bold uppercase group-hover:text-amber-500 transition-colors">Định mức ✎</span>
+                    {/* VÙNG CHỮ NỔI: Định mức và Còn lại */}
+                    <div className="flex justify-between items-center mt-2 pl-5">
+                      {/* CỘT TRÁI: ĐỊNH MỨC + NÚT EDIT */}
+                      <div className="flex items-center gap-1.5 group" onClick={(e) => handleStartEdit(e, ns)}>
+                        <span className="text-xs text-slate-500 group-hover:text-amber-500 transition-colors">✎</span>
+                        <span className="text-xs text-slate-300 font-black uppercase">Định mức:</span>
                         {isEditing ? (
                           <input 
                             autoFocus
@@ -325,18 +341,22 @@ export default function NganSach() {
                             onChange={(e) => setEditValue(e.target.value.replace(/,/g, ""))}
                             onBlur={() => handleUpdateDinhMuc(ns.ngan_sach_id)}
                             onKeyDown={(e) => e.key === 'Enter' && handleUpdateDinhMuc(ns.ngan_sach_id)}
-                            className="bg-slate-800 border border-amber-500 rounded px-1 text-xs text-amber-300 font-black w-24 outline-none animate-pulse"
+                            className="bg-slate-800 border border-amber-500 rounded px-1.5 py-0.5 text-xs text-amber-300 font-black w-24 outline-none animate-pulse"
                           />
                         ) : (
-                          <span className="text-xs font-medium text-slate-300">{handleFormatCurrency(ns.dinh_muc)}</span>
+                          <span className="text-xs font-black text-slate-200">{handleFormatCurrency(ns.dinh_muc)}</span>
                         )}
                       </div>
                       
-                      <div className="flex flex-col items-end">
-                        <span className="text-[9px] text-slate-500 font-bold uppercase">Còn lại</span>
-                        <span className={`text-base font-black leading-none ${ns.so_du_con_lai < 0 ? 'text-red-400' : 'text-emerald-400'}`}>{handleFormatCurrency(ns.so_du_con_lai)}</span>
+                      {/* CỘT PHẢI: CÒN LẠI */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm text-slate-300 font-black uppercase">Còn lại:</span>
+                        <span className={`text-sm font-black leading-none ${ns.so_du_con_lai < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                          {handleFormatCurrency(ns.so_du_con_lai)}
+                        </span>
                       </div>
                     </div>
+
                   </div>
                 </div>
 

@@ -11,12 +11,13 @@ import KhoanNo from "./khoanno";
 import GiaoDich from "./giaodich";
 import DieuChuyen from "./dieuchuyen"; 
 import RutDuPhong from "./rutduphong"; 
-import GiaoDichDauTu from "./giaodichdautu"; // Import Tab Đầu Tư
+import GiaoDichDauTu from "./giaodichdautu"; 
+import LichSuThuChi from "./lichsuthuchi"; // Import Tab Lịch sử mới
 
 import { GetThongKeSoDuUseCase } from "@/2_use_cases/transactions/GetThongKeSoDuUseCase";
 
-// Thêm "dautu" vào TabState
-type TabState = "main" | "nguontien" | "ngansach" | "khoanno" | "giaodich" | "dieuchuyen" | "rutduphong" | "dautu";
+// Thêm "lichsu" vào TabState
+type TabState = "main" | "nguontien" | "ngansach" | "khoanno" | "giaodich" | "dieuchuyen" | "rutduphong" | "dautu" | "lichsu";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -74,12 +75,11 @@ export default function DashboardPage() {
     setPopup({ show: true, message: `Tính năng [${featureName}] đang được thợ rèn nâng cấp.` });
   };
 
-  // Hàm hứng kết quả từ Component Điều Chuyển, Rút Quỹ, và Đầu Tư
   const handleTransferComplete = (message: string, isError: boolean = false) => {
     setPopup({ show: true, message });
     if (!isError) {
       fetchThongKe();
-      setActiveTab("main"); // Sau khi xử lý xong đẩy về màn Tổng quan cho đẹp
+      setActiveTab("main"); 
     }
   };
 
@@ -168,7 +168,11 @@ export default function DashboardPage() {
           {activeTab === "nguontien" && <NguonTien />}
           {activeTab === "ngansach" && <NganSach />}
           {activeTab === "khoanno" && <KhoanNo />}
-          {activeTab === "giaodich" && <GiaoDich />}
+          {/* Truyền hàm đổi Tab xuống Giao Dịch */}
+          {activeTab === "giaodich" && <GiaoDich onOpenLichSu={() => setActiveTab("lichsu")} />}
+          
+          {/* Nạp Tab Lịch Sử vào đây */}
+          {activeTab === "lichsu" && <LichSuThuChi />}
         </div>
 
         {/* === 3. THANH ĐIỀU HƯỚNG BÊN DƯỚI === */}
@@ -188,9 +192,9 @@ export default function DashboardPage() {
             </button>
           </div>
           <div className="relative -top-8 flex-shrink-0 px-2">
-            <button onClick={() => setActiveTab("giaodich")} className={`group w-16 h-16 rounded-full flex items-center justify-center border-4 border-slate-900 active:scale-90 transition-all duration-300 ${activeTab === 'giaodich' ? 'bg-gradient-to-tr from-emerald-500 to-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.8)]' : 'bg-gradient-to-tr from-emerald-600 to-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:shadow-[0_0_25px_rgba(16,185,129,0.7)]'}`}>
-              <span className={`text-4xl font-black leading-none pb-1 transition-transform duration-300 ease-bounce ${activeTab === 'giaodich' ? 'text-slate-800 rotate-45' : 'text-slate-900 group-hover:rotate-90'}`}>
-                {activeTab === 'giaodich' ? '×' : '＋'}
+            <button onClick={() => setActiveTab("giaodich")} className={`group w-16 h-16 rounded-full flex items-center justify-center border-4 border-slate-900 active:scale-90 transition-all duration-300 ${(activeTab === 'giaodich' || activeTab === 'lichsu') ? 'bg-gradient-to-tr from-emerald-500 to-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.8)]' : 'bg-gradient-to-tr from-emerald-600 to-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:shadow-[0_0_25px_rgba(16,185,129,0.7)]'}`}>
+              <span className={`text-4xl font-black leading-none pb-1 transition-transform duration-300 ease-bounce ${(activeTab === 'giaodich' || activeTab === 'lichsu') ? 'text-slate-800 rotate-45' : 'text-slate-900 group-hover:rotate-90'}`}>
+                {(activeTab === 'giaodich' || activeTab === 'lichsu') ? '×' : '＋'}
               </span>
             </button>
           </div>
