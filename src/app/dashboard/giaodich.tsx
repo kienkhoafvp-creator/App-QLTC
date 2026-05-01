@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { CreatePhieuThuUseCase } from "@/2_use_cases/transactions/CreatePhieuThuUseCase";
 import { CreatePhieuChiUseCase } from "@/2_use_cases/transactions/CreatePhieuChiUseCase";
-import { GetNguonTienUseCase } from "@/2_use_cases/transactions/GetNguonTienUseCase";
-import { NganSachRepo } from "@/3_adapters/repositories/NganSachRepo";
-import { KhoanNoRepo } from "@/3_adapters/repositories/KhoanNoRepo";
+// Thay thế hoàn toàn bằng các UseCase Thống Kê
+import { GetThongKeNguonTienUseCase } from "@/2_use_cases/transactions/GetThongKeNguonTienUseCase";
+import { GetThongKeNganSachUseCase } from "@/2_use_cases/transactions/GetThongKeNganSachUseCase";
+import { GetThongKeKhoanNoUseCase } from "@/2_use_cases/transactions/GetThongKeKhoanNoUseCase";
 
 export default function GiaoDich() {
   const [activeTab, setActiveTab] = useState<"thu" | "chi">("chi");
@@ -33,17 +34,20 @@ export default function GiaoDich() {
 
     const fetchData = async () => {
       try {
-        const ntUseCase = new GetNguonTienUseCase();
+        // Tải Nguồn Tiền từ View Thống Kê
+        const ntUseCase = new GetThongKeNguonTienUseCase();
         const ntData = await ntUseCase.execute();
-        const finalNtData = [...ntData, { id: "00000000-0000-0000-0000-000000000000", ten_nguon: "Nguồn khác" }];
+        const finalNtData = [...ntData, { nguon_tien_id: "00000000-0000-0000-0000-000000000000", ten_nguon: "Nguồn khác", sum_loi_nhuan_gop: 0 }];
         setNguonTienList(finalNtData);
-        if (finalNtData.length > 0) setNguonTienId(finalNtData[0].id!);
+        if (finalNtData.length > 0) setNguonTienId(finalNtData[0].nguon_tien_id);
 
-        const nsRepo = new NganSachRepo();
-        setNganSachList(await nsRepo.layDanhSachNganSach());
+        // Tải Ngân Sách từ View Thống Kê
+        const nsUseCase = new GetThongKeNganSachUseCase();
+        setNganSachList(await nsUseCase.execute());
 
-        const knRepo = new KhoanNoRepo();
-        setKhoanNoList(await knRepo.layDanhSachKhoanNo());
+        // Tải Khoản Nợ từ View Thống Kê
+        const knUseCase = new GetThongKeKhoanNoUseCase();
+        setKhoanNoList(await knUseCase.execute());
       } catch (error) {
         console.error("Lỗi tải dữ liệu:", error);
       }
@@ -51,9 +55,19 @@ export default function GiaoDich() {
     fetchData();
   }, []);
 
+  // Format dùng cho ô input (loại bỏ chữ cái và dấu âm để nhập liệu dễ dàng)
   const handleFormatCurrency = (value: string) => {
     const numericValue = value.replace(/\D/g, "");
     return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // Format dùng cho nhãn hiển thị (Giữ lại dấu âm cho lợi nhuận, số dư)
+  const formatLabelCurrency = (val: number | string) => {
+    if (val === null || val === undefined) return "0";
+    const num = Number(val);
+    const sign = num < 0 ? "-" : "";
+    const absStr = Math.abs(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return `${sign}${absStr}`;
   };
 
   const resetForm = () => {
@@ -75,7 +89,7 @@ export default function GiaoDich() {
           ly_do_thu: lyDo,
           nguoi_thu: nguoiThucHien,
           thoi_gian: thoiGian ? new Date(thoiGian).toISOString() : new Date().toISOString(),
-          id_nguon_thu: nguonTienId
+          id_nguon_thu: nguonTienId // Ánh xạ đúng ID từ dropdown
         });
         alert("Ghi nhận Phiếu Thu thành công.");
       } else {
@@ -168,18 +182,27 @@ export default function GiaoDich() {
                     >
                       <option value="">-- Chọn chi tiết --</option>
                       
+                      {/* Nâng cấp hiển thị Lợi nhuận của Kinh Doanh */}
                       {loaiMangChi === "KINH_DOANH" && nguonTienList
-                        .filter(nguon => nguon.id !== "00000000-0000-0000-0000-000000000000") // Lọc bỏ ID giả
+                        .filter(nguon => nguon.nguon_tien_id !== "00000000-0000-0000-0000-000000000000") 
                         .map(nguon => (
-                        <option key={`NGUON_${nguon.id}`} value={`NGUON_${nguon.id}`}>💰 {nguon.ten_nguon}</option>
+                        <option key={`NGUON_${nguon.nguon_tien_id}`} value={`NGUON_${nguon.nguon_tien_id}`}>
+                          💰 {nguon.ten_nguon} ({formatLabelCurrency(nguon.sum_loi_nhuan_gop)}đ)
+                        </option>
                       ))}
 
+                      {/* Nâng cấp hiển thị Số dư còn lại của Ngân sách */}
                       {loaiMangChi === "NGAN_SACH" && nganSachList.map(ns => (
-                        <option key={`NS_${ns.id}`} value={`NS_${ns.id}`}>📋 {ns.ten_ngan_sach}</option>
+                        <option key={`NS_${ns.ngan_sach_id}`} value={`NS_${ns.ngan_sach_id}`}>
+                          📋 {ns.ten_ngan_sach} ({formatLabelCurrency(ns.so_du_con_lai)}đ)
+                        </option>
                       ))}
 
+                      {/* Nâng cấp hiển thị Số nợ còn lại của Khoản nợ */}
                       {loaiMangChi === "NO" && khoanNoList.map(kn => (
-                        <option key={`NO_${kn.id}`} value={`NO_${kn.id}`}>📉 Trả nợ: {kn.ten_khoan_no}</option>
+                        <option key={`NO_${kn.khoan_no_id}`} value={`NO_${kn.khoan_no_id}`}>
+                          📉 {kn.ten_khoan_no} ({formatLabelCurrency(kn.so_tien_con_lai)}đ)
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -198,7 +221,7 @@ export default function GiaoDich() {
                   disabled={isLoading} 
                 >
                   {nguonTienList.map((nguon) => (
-                    <option key={nguon.id} value={nguon.id}>
+                    <option key={nguon.nguon_tien_id} value={nguon.nguon_tien_id}>
                       {nguon.ten_nguon === "Nguồn khác" ? "📁 " : "🏦 "}
                       {nguon.ten_nguon}
                     </option>
