@@ -19,12 +19,33 @@ export class KhoanNoRepo {
     return result as KhoanNo;
   }
 
-  // Khuyến nghị: Hàm này đang thừa, nên cân nhắc xóa bỏ
+  // HÀM MỚI 1: Đếm số lượng phiếu chi gắn với khoản nợ
+  async demSoPhieuChi(idKhoanNo: string): Promise<number> {
+    const { count, error } = await supabase
+      .from('phieu_chi')
+      .select('*', { count: 'exact', head: true })
+      .eq('id_khoan_no', idKhoanNo);
+
+    if (error) throw new Error(`Lỗi kiểm tra giao dịch: ${error.message}`);
+    return count || 0;
+  }
+
+  // HÀM MỚI 2: Xóa cứng khoản nợ
+  async xoaKhoanNo(idKhoanNo: string): Promise<void> {
+    const { error } = await supabase
+      .from('khoan_no')
+      .delete()
+      .eq('id', idKhoanNo);
+
+    if (error) throw new Error(`Lỗi khi xóa khoản nợ: ${error.message}`);
+  }
+  // HÀM ĐƯỢC PHỤC HỒI: Dùng cho trang Giao Dịch (giaodich.tsx)
   async layDanhSachKhoanNo() {
     const { data, error } = await supabase
       .from('khoan_no')
       .select('*')
-      .order('thu_tu', { ascending: true }); // Sắp xếp theo thứ tự
+      .order('thu_tu', { ascending: true }); // Vẫn giữ sắp xếp theo thứ tự cho đồng bộ
+      
     if (error) throw new Error(error.message);
     return data;
   }

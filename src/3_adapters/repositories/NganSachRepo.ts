@@ -28,7 +28,6 @@ export class NganSachRepo {
     if (error) throw new Error(`Lỗi cập nhật định mức: ${error.message}`);
   }
 
-  // HÀM MỚI: Khóa ngân sách cũ lại để đưa vào lịch sử
   async dongNganSach(id: string): Promise<void> {
     const { error } = await supabase
       .from('ngan_sach')
@@ -38,6 +37,28 @@ export class NganSachRepo {
     if (error) throw new Error(`Lỗi đóng ngân sách: ${error.message}`);
   }
 
+  // HÀM MỚI 1: Đếm số lượng phiếu chi gắn với ngân sách
+  async demSoPhieuChi(idNganSach: string): Promise<number> {
+    const { count, error } = await supabase
+      .from('phieu_chi')
+      .select('*', { count: 'exact', head: true })
+      .eq('id_ngan_sach', idNganSach);
+
+    if (error) throw new Error(`Lỗi kiểm tra giao dịch: ${error.message}`);
+    return count || 0;
+  }
+
+  // HÀM MỚI 2: Xóa cứng ngân sách
+  async xoaNganSach(idNganSach: string): Promise<void> {
+    const { error } = await supabase
+      .from('ngan_sach')
+      .delete()
+      .eq('id', idNganSach);
+
+    if (error) throw new Error(`Lỗi khi xóa ngân sách: ${error.message}`);
+  }
+
+  // Khuyến nghị: Hàm này đang thừa (do đã dùng View ở UseCase), có thể xóa bỏ
   async layDanhSachNganSach() {
     const { data, error } = await supabase
       .from('ngan_sach')

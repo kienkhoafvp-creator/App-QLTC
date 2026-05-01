@@ -6,6 +6,7 @@ import { CreateKhoanNoUseCase } from "@/2_use_cases/transactions/CreateKhoanNoUs
 import { GetNguonTienUseCase } from "@/2_use_cases/transactions/GetNguonTienUseCase";
 import { GetThongKeKhoanNoUseCase } from "@/2_use_cases/transactions/GetThongKeKhoanNoUseCase";
 import { GetChiTietKhoanNoUseCase } from "@/2_use_cases/transactions/GetChiTietKhoanNoUseCase";
+import { DeleteKhoanNoUseCase } from "@/2_use_cases/transactions/DeleteKhoanNoUseCase"; 
 import { NguonTien } from "@/1_domain/models/NguonTien";
 
 export default function KhoanNo() {
@@ -15,17 +16,20 @@ export default function KhoanNo() {
     return strVal.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  const handleFormatDate = (dateString: string) => {
-    if (!dateString) return "";
+  // Hàm mới: Chẻ đôi ngày tháng để xếp 2 dòng
+  const parseDateSplit = (dateString: string) => {
+    if (!dateString) return { dm: "", y: "" };
     const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit', year: '2-digit' }); 
+    const dm = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const y = date.getFullYear().toString();
+    return { dm, y };
   };
 
   const [tenKhoanNo, setTenKhoanNo] = useState("");
   const [tongGocVay, setTongGocVay] = useState(""); 
   const [tongTienPhaiTra, setTongTienPhaiTra] = useState(""); 
   const [idNguonGanNo, setIdNguonGanNo] = useState("NO_TIEU_DUNG"); 
-  const [thuTuInput, setThuTuInput] = useState<number | "">(""); // State cho thứ tự
+  const [thuTuInput, setThuTuInput] = useState<number | "">(""); 
 
   const [isLoading, setIsLoading] = useState(false);
   const [nguonTienList, setNguonTienList] = useState<NguonTien[]>([]);
@@ -36,6 +40,7 @@ export default function KhoanNo() {
   const [isLoadingChiTiet, setIsLoadingChiTiet] = useState(false);
 
   const [popup, setPopup] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
+  const [xoaModalData, setXoaModalData] = useState<{ id: string, ten: string } | null>(null);
 
   useEffect(() => {
     const fetchNguonTien = async () => {
@@ -64,7 +69,6 @@ export default function KhoanNo() {
     fetchDanhSachNo();
   }, [fetchDanhSachNo]);
 
-  // Tự động gán thứ tự tiếp theo khi tạo mới
   useEffect(() => {
     setThuTuInput(danhSachKhoanNo.length + 1);
   }, [danhSachKhoanNo]);
@@ -85,7 +89,6 @@ export default function KhoanNo() {
       const parsedTra = rawTienPhaiTra ? parseFloat(rawTienPhaiTra) : parsedGoc;
       const finalThuTu = thuTuInput !== "" ? Number(thuTuInput) - 1 : danhSachKhoanNo.length;
 
-      // Nhớ đảm bảo UseCase của bạn hỗ trợ truyền tham số thu_tu nhé
       const rawData = {
         ten_khoan_no: tenKhoanNo,
         tong_goc_vay: parsedGoc,
@@ -94,7 +97,6 @@ export default function KhoanNo() {
       };
 
       const useCase = new CreateKhoanNoUseCase();
-      // Truyền thêm finalThuTu nếu UseCase của bạn đã được cập nhật giống Ngân sách
       await useCase.execute(rawData, finalThuTu); 
 
       setPopup({ show: true, message: "🎉 TING! Đã khai báo thành công Khoản Nợ mới!" });
@@ -127,7 +129,6 @@ export default function KhoanNo() {
     }
   };
 
-  // Logic Di chuyển lên xuống
   const handleMove = async (index: number, direction: 'up' | 'down') => {
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === danhSachKhoanNo.length - 1) return;
@@ -143,6 +144,24 @@ export default function KhoanNo() {
       const updates = _danhSach.map((item, idx) => ({ id: item.khoan_no_id, thu_tu: idx }));
       await supabase.rpc('cap_nhat_thu_tu_khoan_no', { p_data: updates });
     } catch (error) { console.error("Lỗi cập nhật thứ tự:", error); }
+  };
+
+  const submitXoa = async () => {
+    if (!xoaModalData) return;
+    setIsLoading(true);
+    try {
+      const useCase = new DeleteKhoanNoUseCase();
+      await useCase.execute(xoaModalData.id);
+
+      setPopup({ show: true, message: "🔥 Đã thiêu rụi khoản nợ thành công!" });
+      setXoaModalData(null);
+      fetchDanhSachNo(); 
+    } catch (error: any) {
+      setXoaModalData(null); 
+      setPopup({ show: true, message: `⚠️ Cảnh Báo: ${error.message}` });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -219,38 +238,58 @@ export default function KhoanNo() {
           {danhSachKhoanNo.map((kn, index) => {
             const isExpanded = expandedId === kn.khoan_no_id;
             const chiTiet = chiTietGiaoDich[kn.khoan_no_id];
+            
+            // Xử lý tách ngày tháng
+            const { dm, y } = parseDateSplit(kn.ngay_tao);
 
             return (
               <div key={kn.khoan_no_id} className="bg-slate-900 border border-slate-700/80 rounded-xl overflow-hidden flex flex-col shadow-sm">
                 
                 <div className="flex items-stretch w-full">
-                  {/* Cột mũi tên di chuyển */}
+                  {/* Cột 1: Mũi tên (32px) */}
                   <div className="flex flex-col items-center justify-center bg-slate-800 border-r border-slate-700/50 w-8 shrink-0">
                     <button onClick={(e) => { e.stopPropagation(); handleMove(index, 'up'); }} disabled={index === 0} className="flex-1 w-full text-slate-500 hover:text-emerald-400 disabled:opacity-20 transition-all text-xs">▲</button>
                     <button onClick={(e) => { e.stopPropagation(); handleMove(index, 'down'); }} disabled={index === danhSachKhoanNo.length - 1} className="flex-1 w-full text-slate-500 hover:text-orange-400 disabled:opacity-20 transition-all text-xs">▼</button>
                   </div>
 
-                  {/* 1 HÀNG HIỂN THỊ THÔNG TIN CHÍNH */}
-                  <div className="p-3 hover:bg-slate-800/50 transition-colors flex items-center justify-between gap-1 w-full cursor-pointer" onClick={() => handleToggleExpand(kn.khoan_no_id)}>
-                    <div className="flex items-center gap-1.5 flex-shrink max-w-[35%] overflow-hidden">
-                      <span className="text-[10px] font-black text-slate-600 shrink-0">{index + 1}.</span>
-                      <span className="font-black text-red-400 text-xs uppercase truncate" title={kn.ten_khoan_no}>{kn.ten_khoan_no}</span>
+                  {/* THÔNG TIN CHÍNH */}
+                  <div className="p-2 hover:bg-slate-800/50 transition-colors flex items-center gap-1.5 w-full cursor-pointer overflow-hidden" onClick={() => handleToggleExpand(kn.khoan_no_id)}>
+                    
+                    {/* Cột 2: Tên (Bị ép nhỏ lại do các cột kia rộng ra, cho phép rớt 2 dòng) */}
+                    <div className="flex items-start gap-1 flex-1 min-w-0 pr-1">
+                      <span className="text-[10px] font-black text-slate-600 shrink-0 mt-[1px]">{index + 1}.</span>
+                      <span className="font-black text-red-400 text-[10px] uppercase line-clamp-2 leading-tight break-words" title={kn.ten_khoan_no}>
+                        {kn.ten_khoan_no}
+                      </span>
                     </div>
                     
-                    <div className="flex flex-col items-end shrink-0">
-                      {/* Đã đổi nhãn từ Gốc -> Phải Trả, ánh xạ tong_tien_phai_tra */}
-                      <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Phải Trả</span>
-                      <span className="text-[10px] font-medium text-slate-300 leading-none">{handleFormatCurrency(kn.tong_tien_phai_tra)}</span>
+                    {/* Cột 3: Phải trả (Mở rộng thành 68px để chứa số trăm triệu) */}
+                    <div className="flex flex-col items-end shrink-0 w-[68px]">
+                      <span className="text-[8px] text-slate-500 font-bold uppercase tracking-tighter">Phải Trả</span>
+                      <span className="text-[10px] font-medium text-slate-300 leading-none w-full text-right truncate">{handleFormatCurrency(kn.tong_tien_phai_tra)}</span>
                     </div>
 
-                    <div className="flex flex-col items-end shrink-0 pl-1 border-l border-slate-700/50">
-                      <span className="text-[9px] text-red-500 font-bold uppercase tracking-tighter">Còn</span>
-                      <span className="text-xs font-black text-red-400 leading-none">{handleFormatCurrency(kn.so_tien_con_lai)}</span>
+                    {/* Cột 4: Còn lại (Mở rộng thành 75px để ưu tiên số quan trọng nhất) */}
+                    <div className="flex flex-col items-end shrink-0 w-[75px] pl-1.5 border-l border-slate-700/50">
+                      <span className="text-[8px] text-red-500 font-bold uppercase tracking-tighter">Còn</span>
+                      <span className="text-[11px] font-black text-red-400 leading-none w-full text-right truncate">{handleFormatCurrency(kn.so_tien_con_lai)}</span>
                     </div>
 
-                    <div className="shrink-0 bg-slate-800 px-1 py-0.5 rounded border border-slate-700">
-                      <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap">{handleFormatDate(kn.ngay_tao)}</span>
+                    {/* Cột 5: Ngày (Xếp chồng) + Thùng rác (Tổng ~55px) */}
+                    <div className="flex items-center justify-end gap-1.5 shrink-0 w-[55px]">
+                      <div className="flex flex-col items-center justify-center bg-slate-800 px-1 py-0.5 rounded border border-slate-700">
+                        <span className="text-[9px] font-bold text-slate-300 leading-none">{dm}</span>
+                        <span className="text-[7px] font-black text-amber-500 leading-none mt-[2px] tracking-wider">{y}</span>
+                      </div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setXoaModalData({ id: kn.khoan_no_id, ten: kn.ten_khoan_no }); }}
+                        className="shrink-0 text-slate-500 hover:text-red-500 active:scale-90 transition-all text-xs flex items-center justify-center w-4"
+                        title="Xóa khoản nợ"
+                      >
+                        🗑️
+                      </button>
                     </div>
+
                   </div>
                 </div>
 
@@ -280,6 +319,28 @@ export default function KhoanNo() {
           })}
         </div>
       </div>
+
+      {/* POPUP XÓA KHOẢN NỢ */}
+      {xoaModalData && (
+        <div className="absolute inset-0 z-[60] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+          <div className="w-full max-w-sm bg-slate-900 border border-red-500/50 rounded-2xl p-5 shadow-[0_0_50px_rgba(220,38,38,0.15)] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+            
+            <h3 className="text-lg font-black text-red-400 mb-1 uppercase tracking-widest text-center">Hủy Bỏ Giao Ước</h3>
+            <p className="text-[10px] text-slate-400 text-center mb-5 uppercase tracking-wide">Hành động này không thể hoàn tác</p>
+
+            <div className="text-center mb-6">
+              <p className="text-sm text-slate-300">Bạn có chắc chắn muốn thiêu rụi khoản nợ:</p>
+              <p className="text-lg font-black text-white mt-1 border border-red-900/50 bg-red-950/30 rounded-lg p-2 mx-4">"{xoaModalData.ten}"?</p>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button type="button" onClick={() => setXoaModalData(null)} className="flex-1 bg-slate-800 text-slate-400 font-bold py-2.5 rounded-xl text-xs uppercase hover:bg-slate-700 transition-all">Quay Lại</button>
+              <button type="button" onClick={submitXoa} disabled={isLoading} className="flex-1 bg-gradient-to-r from-red-600 to-red-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg">{isLoading ? "Đang xử lý..." : "Xóa Bỏ"}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* POPUP TRẠM THÔNG BÁO */}
       {popup.show && (

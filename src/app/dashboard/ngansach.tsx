@@ -7,6 +7,7 @@ import { GetThongKeNganSachUseCase } from "@/2_use_cases/transactions/GetThongKe
 import { GetChiTietNganSachUseCase } from "@/2_use_cases/transactions/GetChiTietNganSachUseCase";
 import { UpdateDinhMucNganSachUseCase } from "@/2_use_cases/transactions/UpdateDinhMucNganSachUseCase";
 import { ResetNganSachUseCase } from "@/2_use_cases/transactions/ResetNganSachUseCase";
+import { DeleteNganSachUseCase } from "@/2_use_cases/transactions/DeleteNganSachUseCase"; // Import UseCase Xóa
 
 export default function NganSach() {
   const getTodayDateString = () => {
@@ -52,6 +53,8 @@ export default function NganSach() {
   const [editValue, setEditValue] = useState("");
 
   const [resetModalData, setResetModalData] = useState<any | null>(null);
+  // State quản lý Modal Xóa
+  const [xoaModalData, setXoaModalData] = useState<{ id: string, ten: string } | null>(null);
   const [popup, setPopup] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
 
   const fetchThongKeNganSach = useCallback(async () => {
@@ -218,10 +221,28 @@ export default function NganSach() {
     }
   };
 
+  // Logic gọi UseCase Xóa
+  const submitXoa = async () => {
+    if (!xoaModalData) return;
+    setIsLoading(true);
+    try {
+      const useCase = new DeleteNganSachUseCase();
+      await useCase.execute(xoaModalData.id);
+
+      setPopup({ show: true, message: "🔥 Đã thiêu rụi Ngân Sách thành công!" });
+      setXoaModalData(null);
+      fetchThongKeNganSach(); // Cập nhật lại danh sách
+    } catch (error: any) {
+      setXoaModalData(null); 
+      setPopup({ show: true, message: `⚠️ Cảnh Báo: ${error.message}` });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-300 relative">
       
-      {/* HEADER NÂNG CẤP 1 & 2: Căn giữa, gộp chung Ngân Sách Tháng (Số tiền) */}
       <div className="p-3 bg-slate-800 border-b border-amber-500/30 shadow-md flex-shrink-0 flex items-center justify-center">
         <h1 className="text-amber-400 font-black uppercase tracking-widest text-sm whitespace-nowrap">
           Ngân Sách Tháng ({handleFormatCurrency(nganSachThang)})
@@ -278,9 +299,19 @@ export default function NganSach() {
                         )}
                       </div>
 
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ml-2 ${isExpired ? 'text-red-400 bg-red-950/30 border-red-900/50' : 'text-amber-500 bg-slate-800 border-slate-700'}`}>
-                        Hạn: {handleFormatDate(ns.thoi_gian_ket_thuc)}
-                      </span>
+                      {/* Gắn nút thùng rác ngay cạnh badge ngày tháng */}
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ${isExpired ? 'text-red-400 bg-red-950/30 border-red-900/50' : 'text-amber-500 bg-slate-800 border-slate-700'}`}>
+                          Hạn: {handleFormatDate(ns.thoi_gian_ket_thuc)}
+                        </span>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setXoaModalData({ id: ns.ngan_sach_id, ten: ns.ten_ngan_sach }); }}
+                          className="shrink-0 text-slate-500 hover:text-red-500 active:scale-90 transition-all text-xs"
+                          title="Xóa ngân sách"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex justify-between items-end mt-1.5 pl-5">
@@ -309,7 +340,6 @@ export default function NganSach() {
                   </div>
                 </div>
 
-                {/* VÙNG XỔ CHI TIẾT ĐƯỢC NÂNG CẤP GIAO DIỆN (Nâng cấp 3 & 4) */}
                 {isExpanded && (
                   <div className="p-2 border-t border-slate-800 bg-slate-950/80 animate-in slide-in-from-top-2 duration-200">
                     <h4 className="text-[10px] font-black text-orange-500 uppercase mb-2 text-center tracking-widest border-b border-orange-500/20 pb-1">Lịch sử xuất quỹ</h4>
@@ -321,13 +351,8 @@ export default function NganSach() {
                       ) : (
                         chiTiet?.map(c => (
                           <div key={c.id} className="flex justify-between items-start bg-slate-800/80 px-2 py-2 rounded border border-slate-700/50 text-sm gap-3">
-                            {/* Người chi ở vị trí bên cùng bên trái, font-size đồng bộ text-sm */}
                             <span className="font-medium text-amber-500/80 shrink-0 whitespace-nowrap pt-0.5 w-14">👤 {c.nguoi_chi}</span>
-                            
-                            {/* Lý do chi: bỏ truncate, thêm break-words để tự xuống dòng, chiếm phần không gian trống */}
                             <span className="font-bold text-slate-300 flex-1 whitespace-normal break-words leading-tight pt-0.5">{c.ly_do_chi}</span>
-                            
-                            {/* Số tiền nằm bên phải */}
                             <span className="text-orange-400 font-black shrink-0 pt-0.5">-{handleFormatCurrency(c.so_tien)}</span>
                           </div>
                         ))
@@ -383,6 +408,28 @@ export default function NganSach() {
                 <button type="submit" disabled={isLoading} className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg">{isLoading ? "Đang chạy..." : "Xác Nhận"}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP XÓA NGÂN SÁCH (GAMEFI STYLE) */}
+      {xoaModalData && (
+        <div className="absolute inset-0 z-[60] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+          <div className="w-full max-w-sm bg-slate-900 border border-red-500/50 rounded-2xl p-5 shadow-[0_0_50px_rgba(220,38,38,0.15)] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+            
+            <h3 className="text-lg font-black text-red-400 mb-1 uppercase tracking-widest text-center">Hủy Bỏ Giao Ước</h3>
+            <p className="text-[10px] text-slate-400 text-center mb-5 uppercase tracking-wide">Hành động này không thể hoàn tác</p>
+
+            <div className="text-center mb-6">
+              <p className="text-sm text-slate-300">Bạn có chắc chắn muốn thiêu rụi ngân sách:</p>
+              <p className="text-lg font-black text-white mt-1 border border-red-900/50 bg-red-950/30 rounded-lg p-2 mx-4">"{xoaModalData.ten}"?</p>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button type="button" onClick={() => setXoaModalData(null)} className="flex-1 bg-slate-800 text-slate-400 font-bold py-2.5 rounded-xl text-xs uppercase hover:bg-slate-700 transition-all">Quay Lại</button>
+              <button type="button" onClick={submitXoa} disabled={isLoading} className="flex-1 bg-gradient-to-r from-red-600 to-red-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg">{isLoading ? "Đang xử lý..." : "Xóa Bỏ"}</button>
+            </div>
           </div>
         </div>
       )}
