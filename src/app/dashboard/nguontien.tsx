@@ -142,12 +142,13 @@ export default function NguonTien() {
   return (
     <div className="w-full h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-300 relative">
       
-      {/* HEADER ĐÃ CẬP NHẬT */}
-      <div className="p-3 bg-slate-800 border-b border-blue-500/30 shadow-md flex-shrink-0 flex justify-between items-center">
+      {/* HEADER ĐÃ CẬP NHẬT (CĂN GIỮA TUYỆT ĐỐI) */}
+      <div className="relative p-3 bg-slate-800 border-b border-blue-500/30 shadow-md flex-shrink-0 flex justify-center items-center">
         <h1 className="text-blue-400 font-black uppercase tracking-widest text-sm">NGUỒN TIỀN</h1>
+        
         <button 
           onClick={() => setShowChart(true)}
-          className="bg-slate-900 hover:bg-slate-700 text-cyan-400 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 shadow-inner"
+          className="absolute right-3 bg-slate-900 hover:bg-slate-700 text-cyan-400 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 shadow-inner"
         >
           <span className="text-sm leading-none">📊</span>
           <span className="hidden sm:inline tracking-widest">BIỂU ĐỒ</span>
