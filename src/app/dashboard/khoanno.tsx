@@ -16,7 +16,6 @@ export default function KhoanNo() {
     return strVal.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  // Hàm mới: Chẻ đôi ngày tháng để xếp 2 dòng
   const parseDateSplit = (dateString: string) => {
     if (!dateString) return { dm: "", y: "" };
     const date = new Date(dateString);
@@ -89,11 +88,12 @@ export default function KhoanNo() {
       const parsedTra = rawTienPhaiTra ? parseFloat(rawTienPhaiTra) : parsedGoc;
       const finalThuTu = thuTuInput !== "" ? Number(thuTuInput) - 1 : danhSachKhoanNo.length;
 
+      // XỬ LÝ LỖI ÉP KIỂU UUID TẠI ĐÂY: Nếu chọn "NO_TIEU_DUNG" thì đẩy xuống Database là null
       const rawData = {
         ten_khoan_no: tenKhoanNo,
         tong_goc_vay: parsedGoc,
         tong_tien_phai_tra: parsedTra,
-        id_nguon_gan_no: idNguonGanNo
+        id_nguon_gan_no: idNguonGanNo === "NO_TIEU_DUNG" ? null : idNguonGanNo
       };
 
       const useCase = new CreateKhoanNoUseCase();

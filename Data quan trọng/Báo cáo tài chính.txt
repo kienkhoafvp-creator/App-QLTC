@@ -1,0 +1,64 @@
+1. INFLOW: Trạm Kiểm Soát Mạch Máu (Nguồn Thu)
+Mục tiêu không chỉ là xem kiếm được bao nhiêu, mà là đánh giá chất lượng và mức độ rủi ro của dòng tiền đó.
+
+Chỉ số cần bóc tách:
+
+Biên lợi nhuận ròng (Net Profit Margin): Lợi nhuận / Tổng thu. (Kiếm 100tr nhưng chi phí hết 90tr thì biên lợi nhuận chỉ 10%, rất rủi ro).
+
+Tỷ trọng đóng góp: Nguồn nào đang là "con gà đẻ trứng vàng", nguồn nào đang "hút máu" (âm tiền).
+
+Biểu đồ trực quan:
+
+Stacked Bar Chart (Cột chồng): Cột Thu màu xanh, Cột Chi phí màu cam đè lên nhau cho từng nguồn. Nhìn vào thấy ngay đoạn chênh lệch (Lợi nhuận) dày hay mỏng.
+
+Line Chart (Đường xu hướng): Vẽ đường lợi nhuận của 3 tháng gần nhất để thấy trend đang cắm đầu xuống hay ngóc đầu lên.
+
+🚨 Cảnh báo hệ thống tự động (Triggers):
+
+Cảnh báo Suy kiệt: "Nguồn [Tên Nguồn] có biên lợi nhuận giảm liên tục trong 2 tháng. Chi phí đang phình to!"
+
+Cảnh báo Độc quyền (Rủi ro tập trung): "Cẩn thận! 80% lợi nhuận tháng này chỉ đến từ 1 nguồn duy nhất. Nếu nguồn này sập, bạn sẽ mất thanh khoản."
+
+2. OUTFLOW: Trạm Giám Sát Van Xả (Ngân Sách & Nợ)
+Chia làm 2 mặt trận: Chi phí linh hoạt (Ngân sách) và Chi phí cố định/Nghĩa vụ (Trả nợ).
+
+Chỉ số cần bóc tách:
+
+Tốc độ đốt tiền (Burn Rate): So sánh % tiền đã tiêu với % thời gian của tháng đã trôi qua.
+
+Tỷ lệ Nợ trên Thu nhập (DTI - Debt-to-Income): Tổng tiền trả nợ tháng này / Tổng lợi nhuận thu về. (Ngưỡng an toàn là dưới 35%).
+
+Biểu đồ trực quan:
+
+Gauge Chart / Bullet Chart (Biểu đồ đồng hồ đo): Cực kỳ phù hợp cho Ngân sách. Vạch màu xanh (An toàn) -> Vàng (Chú ý) -> Đỏ (Vượt định mức).
+
+Waterfall Chart (Biểu đồ thác nước): Cho khoản Nợ. Cột đầu tiên là Tổng nợ gốc, các cột tiếp theo rớt xuống dần (tiền đã trả), cột cuối cùng là Nợ còn lại. Nhìn rất sướng mắt và có động lực cày cuốc.
+
+🚨 Cảnh báo hệ thống tự động (Triggers):
+
+Cảnh báo Đốt Ngân Sách: "Mới qua 30% thời gian của tháng nhưng Ngân sách [Tên] đã bốc hơi 70%. Hãy siết lại ngay!"
+
+Cảnh báo Báo động đỏ (Nợ): "Tỷ lệ trả nợ đang chiếm > 50% thu nhập. Bạn đang làm nô lệ cho nợ nần thay vì tích lũy."
+
+3. PERFORMANCE & FORECAST: Đài Quan Sát Tương Lai (Hiệu Suất)
+Đây là nơi tổng hợp Inflow và Outflow để đánh giá Sức Khỏe Tổng Thể và Dự báo tương lai.
+
+Chỉ số cần bóc tách (Bổ sung từ chuyên gia):
+
+Tỷ lệ Tiết kiệm (Savings Rate): (Lợi nhuận - Tổng chi tiêu) / Lợi nhuận. Đây là chỉ số quan trọng số 1 của tự do tài chính.
+
+Đường băng sinh tồn (Runway/Survival Horizon): Tổng (Ví tiền + Dự phòng) / Trung bình chi tiêu 1 tháng. Trả lời câu hỏi: "Nếu ngày mai mất hết nguồn thu, tôi sống sót được bao nhiêu tháng?".
+
+Dự phóng Tự do nợ nần: Với tốc độ trả nợ hiện tại, tháng/năm nào sẽ dứt điểm?
+
+Biểu đồ trực quan:
+
+Radar Chart (Biểu đồ mạng nhện): Đánh giá 5 góc độ sức khỏe: Kiếm tiền, Tiết kiệm, Trả nợ, Dự phòng, Đầu tư. Góc nào méo là biết ngay điểm yếu.
+
+Area Chart (Biểu đồ vùng có dải dự đoán): Đường Net Worth (Tài sản ròng) tăng dần theo thời gian, có dải mờ mờ đứt nét phóng chiếu lên tương lai 6 tháng tới dựa trên tốc độ hiện tại.
+
+🚨 Cảnh báo hệ thống tự động (Triggers):
+
+Cảnh báo Sinh tồn: "Quỹ dự phòng hiện tại chỉ đủ duy trì < 2 tháng. Rủi ro cao nếu xảy ra biến cố!"
+
+Cảnh báo Giậm chân tại chỗ: "Tỷ lệ tiết kiệm tháng này rớt xuống dưới 10%. Bạn đang kiếm nhiều nhưng tiêu cũng nhiều không kém."

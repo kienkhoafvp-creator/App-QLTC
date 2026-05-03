@@ -7,8 +7,8 @@ export class CreateKhoanNoUseCase {
     this.repo = new KhoanNoRepo();
   }
 
-  // Bổ sung tham số thuTu vào hàm execute
-  async execute(raw_data: { ten_khoan_no: string; tong_goc_vay: number; tong_tien_phai_tra: number; id_nguon_gan_no: string }, thuTu: number) {
+  // ĐÃ SỬA LỖI: Thêm "| null" vào kiểu dữ liệu của id_nguon_gan_no
+  async execute(raw_data: { ten_khoan_no: string; tong_goc_vay: number; tong_tien_phai_tra: number; id_nguon_gan_no: string | null }, thuTu: number) {
     if (raw_data.tong_goc_vay <= 0) throw new Error("Tổng gốc vay phải lớn hơn 0");
     if (raw_data.tong_tien_phai_tra < raw_data.tong_goc_vay) throw new Error("Lỗi: Tổng tiền phải trả không được nhỏ hơn Gốc vay ban đầu.");
 
