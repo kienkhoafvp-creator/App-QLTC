@@ -5,6 +5,8 @@ import { supabase } from "@/4_infrastructure/database/supabaseClient";
 import { KiemToanBCTCUseCase } from "@/2_use_cases/transactions/KiemToanBCTCUseCase";
 import { UndoKiemToanUseCase } from "@/2_use_cases/transactions/UndoKiemToanUseCase";
 import LichSuKiemToan from "./lichsukiemtoan";
+// FIX: Import file giao diện chi tiết BCTC
+import BCTCTuanDetail from "./bctc_tuan_detail"; 
 
 interface BCTCProps {
   viTien: number;
@@ -25,8 +27,10 @@ export default function BaoCaoTaiChinh({ viTien, quyDuPhong, quyDauTu, onComplet
   const [isUndoing, setIsUndoing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // FIX: Thêm key để kích hoạt load lại component lịch sử
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Lệnh MỚI: State để quản lý việc mở màn hình BCTC chi tiết
+  const [selectedReport, setSelectedReport] = useState<{tuan: number, nam: number} | null>(null);
 
   const handleFormatCurrency = (value: string | number) => {
     if (!value) return "0";
@@ -59,7 +63,7 @@ export default function BaoCaoTaiChinh({ viTien, quyDuPhong, quyDauTu, onComplet
       }
     };
     loadPreviousAccounts();
-  }, [refreshKey]); // Load lại khung tài khoản khi có refresh
+  }, [refreshKey]); 
 
   const handleAddAccount = () => {
     setAccounts([...accounts, { id: Date.now().toString(), name: "", amount: "" }]);
@@ -106,7 +110,6 @@ export default function BaoCaoTaiChinh({ viTien, quyDuPhong, quyDauTu, onComplet
         chiTiet: accounts
       });
       
-      // FIX: Tăng key để danh sách lịch sử bên dưới tự động fetch lại
       setRefreshKey(prev => prev + 1);
       
       onComplete("🎉 Đã lưu Báo Cáo Kiểm Toán! Số dư đã cân bằng.", false);
@@ -125,7 +128,6 @@ export default function BaoCaoTaiChinh({ viTien, quyDuPhong, quyDauTu, onComplet
       const useCase = new UndoKiemToanUseCase();
       await useCase.execute();
       
-      // FIX: Tăng key để cập nhật lại danh sách sau khi Undo
       setRefreshKey(prev => prev + 1);
       
       onComplete("⏪ Đã QUAY XE thành công! Số dư và sổ sách đã hoàn nguyên.", false);
@@ -137,8 +139,8 @@ export default function BaoCaoTaiChinh({ viTien, quyDuPhong, quyDauTu, onComplet
   };
 
   return (
-    <div className="w-full h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="p-4 space-y-4 overflow-y-auto pb-28">
+    <div className="w-full h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-300 relative overflow-hidden">
+      <div className="p-4 space-y-4 overflow-y-auto pb-28 h-full">
         
         {/* === KHỐI KIỂM TOÁN === */}
         <div className="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-lg">
@@ -236,17 +238,24 @@ export default function BaoCaoTaiChinh({ viTien, quyDuPhong, quyDauTu, onComplet
 
         {/* KHU VỰC HIỂN THỊ LỊCH SỬ KIỂM TOÁN */}
         <div className="pt-6 pb-2">
-          {/* FIX: Truyền key để React biết cần re-mount component này khi dữ liệu thay đổi */}
           <LichSuKiemToan 
             key={refreshKey} 
-            onOpenBCTC={(tuan, nam) => {
-              console.log(`Chuyển hướng mở Báo cáo tài chính Tuần ${tuan} Năm ${nam}`);
-              onComplete(`Đang mở BCTC Tuần ${tuan} - ${nam}... (Tính năng đang xây dựng)`, false);
-            }} 
+            // FIX: Khi bấm BCTC, lưu Tuan/Nam vào state để mở màn hình Overlay
+            onOpenBCTC={(tuan, nam) => setSelectedReport({ tuan, nam })} 
           />
         </div>
-
       </div>
+
+      {/* MÀN HÌNH OVERLAY: CHI TIẾT BCTC TUẦN */}
+      {/* Nó sẽ đè lên toàn bộ khu vực Tab Main khi selectedReport có dữ liệu */}
+      {selectedReport && (
+        <BCTCTuanDetail 
+          tuan={selectedReport.tuan} 
+          nam={selectedReport.nam} 
+          // FIX: Nút back đơn giản là xóa state, trả về màn hình cũ
+          onBack={() => setSelectedReport(null)} 
+        />
+      )}
     </div>
   );
 }

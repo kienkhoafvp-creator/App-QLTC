@@ -1,0 +1,5 @@
+2. Đánh giá Khối Thu Nhập Thụ Động (Có dùng đòn bẩy)
+Logic tính toán ở Mục 3 của bạn là một nước đi xuất sắc.
+Công thức: [Lợi nhuận Nguồn] - [Tiền trả nợ cho nguồn đó]
+
+Trong tài chính chuyên sâu, cái này gọi là đo lường Đòn bẩy dương/âm (Positive/Negative Leverage). Nó phơi bày sự thật phũ phàng: Một miếng đất/tài sản có thể đang tăng giá hoặc có sinh lời, nhưng nếu tiền lãi nợ hàng tuần đè bẹp số tiền nó làm ra, thì tài sản đó đang "hút máu" dòng tiền từ công việc kinh doanh kẹo của bạn để nuôi nó. Việc gom nhóm và tính tổng cái này sẽ cho bạn biết: "Đám tài sản bị động này đang tự nuôi nhau, hay đang bắt mình gánh vác?".
