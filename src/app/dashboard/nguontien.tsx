@@ -5,7 +5,9 @@ import { supabase } from "@/4_infrastructure/database/supabaseClient";
 import { CreateNguonTienUseCase } from "@/2_use_cases/transactions/CreateNguonTienUseCase";
 import { GetThongKeNguonTienUseCase } from "@/2_use_cases/transactions/GetThongKeNguonTienUseCase";
 import { GetChiTietNguonTienUseCase } from "@/2_use_cases/transactions/GetChiTietNguonTienUseCase";
-import { DeleteNguonTienUseCase } from "@/2_use_cases/transactions/DeleteNguonTienUseCase"; // Import UseCase Xóa
+import { DeleteNguonTienUseCase } from "@/2_use_cases/transactions/DeleteNguonTienUseCase";
+import { AnimatePresence } from "framer-motion"; // Thêm thư viện hiệu ứng
+import ChartNguonThu from "@/4_infrastructure/ui/components/cards/ChartNguonThu"; // Import Component Biểu đồ
 
 export default function NguonTien() {
   const [tenNguon, setTenNguon] = useState("");
@@ -24,6 +26,9 @@ export default function NguonTien() {
     show: false,
     message: "",
   });
+
+  // State quản lý Biểu đồ
+  const [showChart, setShowChart] = useState(false);
 
   const handleFormatCurrency = (val: number) => {
     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -116,7 +121,6 @@ export default function NguonTien() {
     }
   };
 
-  // Logic gọi UseCase Xóa
   const submitXoa = async () => {
     if (!xoaModalData) return;
     setIsLoading(true);
@@ -137,8 +141,17 @@ export default function NguonTien() {
 
   return (
     <div className="w-full h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-300 relative">
-      <div className="p-3 bg-slate-800 border-b border-blue-500/30 text-center shadow-md flex-shrink-0">
-        <h1 className="text-blue-400 font-black uppercase tracking-widest text-sm">Xưởng Nguồn Tiền</h1>
+      
+      {/* HEADER ĐÃ CẬP NHẬT */}
+      <div className="p-3 bg-slate-800 border-b border-blue-500/30 shadow-md flex-shrink-0 flex justify-between items-center">
+        <h1 className="text-blue-400 font-black uppercase tracking-widest text-sm">NGUỒN TIỀN</h1>
+        <button 
+          onClick={() => setShowChart(true)}
+          className="bg-slate-900 hover:bg-slate-700 text-cyan-400 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 shadow-inner"
+        >
+          <span className="text-sm leading-none">📊</span>
+          <span className="hidden sm:inline tracking-widest">BIỂU ĐỒ</span>
+        </button>
       </div>
 
       <div className="p-3 space-y-4 overflow-y-auto pb-24 flex-1">
@@ -322,6 +335,12 @@ export default function NguonTien() {
           </div>
         </div>
       )}
+
+      {/* KHU VỰC HIỂN THỊ POPUP BIỂU ĐỒ (DÙNG FRAMER MOTION) */}
+      <AnimatePresence>
+        {showChart && <ChartNguonThu onClose={() => setShowChart(false)} />}
+      </AnimatePresence>
+      
     </div>
   );
 }

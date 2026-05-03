@@ -7,7 +7,6 @@ export class KiemToanBCTCUseCase {
     this.repo = new KiemToanRepo();
   }
 
-  // Thuật toán tự động tính ra tuần hiện tại trong năm
   private getWeekNumber(d: Date): [number, number] {
     const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     const dayNum = date.getUTCDay() || 7;
@@ -20,7 +19,10 @@ export class KiemToanBCTCUseCase {
   async execute(payload: { tongHeThong: number, tongThucTe: number, chenhLech: number, chiTiet: any[] }) {
     const [nam, tuan_thu] = this.getWeekNumber(new Date());
 
-    // Ép kiểu mảng tài khoản thành chuẩn JSONB của Database
+    // 1. Lấy thời gian của lần khớp sổ NGAY TRƯỚC ĐÓ để làm mốc bắt đầu
+    const lastRecord = await this.repo.layKiemToanGanNhat();
+    const thoiGianBatDau = lastRecord ? lastRecord.ngay_kiem_toan : null;
+
     const chi_tiet_phan_bo = payload.chiTiet.map(acc => ({
       tai_khoan: acc.name.trim(),
       so_tien: parseFloat(acc.amount.replace(/,/g, "")) || 0
@@ -35,6 +37,16 @@ export class KiemToanBCTCUseCase {
       chi_tiet_phan_bo
     };
 
-    await this.repo.luuKiemToan(dbData);
+    // 2. Lưu biên bản mới -> Lấy được ID và Thời gian kết thúc (thời điểm vừa bấm nút)
+    const newKiemToan = await this.repo.luuKiemToan(dbData);
+
+    // 3. Kích hoạt Hàm chốt sổ lấy đúng khoang thời gian
+    await this.repo.goiHamChotSo(
+      newKiemToan.id, 
+      thoiGianBatDau, 
+      newKiemToan.ngay_kiem_toan, 
+      tuan_thu, 
+      nam
+    );
   }
 }

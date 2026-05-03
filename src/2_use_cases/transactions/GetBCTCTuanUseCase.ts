@@ -11,7 +11,7 @@ export class GetBCTCTuanUseCase {
     const data = await this.repo.fetchBCTCData(tuan, nam);
 
     // ==========================================
-    // 1. GÁN SỐ LIỆU DÒNG TIỀN ĐÃ ĐƯỢC DATABASE TÍNH SẴN
+    // 1. GÁN SỐ LIỆU DÒNG TIỀN TỪ BẢNG CHỐT
     // ==========================================
     const bctc = {
       thuNhapRong: Number(data.bctc?.thu_nhap_rong || 0),
@@ -23,26 +23,26 @@ export class GetBCTCTuanUseCase {
     };
 
     // ==========================================
-    // 2. RÁP DỮ LIỆU TÀI SẢN (ĐẦU TƯ)
+    // 2. RÁP DỮ LIỆU TÀI SẢN VÀ LỊCH SỬ TỪ BẢNG CHỐT
     // ==========================================
     data.taiSanList.forEach(ts => {
       let loiNhuanLuyKe = 0;
       let loiNhuanTuan = 0;
       const lichSuHopLe: any[] = [];
 
-      // Lọc lịch sử của tài sản này
       data.lichSuList.forEach(ls => {
         if (ls.id_nguon_thu !== ts.id_nguon_thu) return;
         
         // CẮT BỎ TƯƠNG LAI: Chỉ lấy lịch sử tính đến tuần đang tra cứu
         if (ls.nam > nam || (ls.nam === nam && ls.tuan > tuan)) return;
 
-        const tien = Number(ls.loi_nhuan_tuan || 0);
+        // Cập nhật: Đọc từ cột loi_nhuan của bảng chot_nguon_thu_tuan
+        const tien = Number(ls.loi_nhuan || 0);
 
         if (ls.nam === nam && ls.tuan === tuan) {
-          loiNhuanTuan = tien; // Tiền kiếm được trong tuần đang soi
+          loiNhuanTuan = tien; 
         } else {
-          loiNhuanLuyKe += tien; // Tiền kiếm được các tuần trước
+          loiNhuanLuyKe += tien; 
         }
 
         lichSuHopLe.push({
@@ -60,7 +60,7 @@ export class GetBCTCTuanUseCase {
 
       bctc.taiSan.push({
         ten: ts.ten_tai_san,
-        tongDauTu: Number(ts.tong_dau_tu) || 1, // Tránh lỗi chia cho 0 trên UI
+        tongDauTu: Number(ts.tong_dau_tu) || 1, 
         loiNhuanLuyKe,
         loiNhuanTuan,
         lichSu: lichSuHopLe
