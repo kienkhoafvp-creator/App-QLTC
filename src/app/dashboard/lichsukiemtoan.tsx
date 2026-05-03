@@ -126,7 +126,7 @@ export default function LichSuKiemToan({ onOpenBCTC }: LichSuProps) {
                     isExpanded ? 'text-white' : 'text-slate-500'
                   }`}
                 >
-                  Chi tiết {isExpanded ? '▲' : '▼'}
+                  Chi tiết tài khoản {isExpanded ? '▲' : '▼'}
                 </button>
               </div>
             </div>
