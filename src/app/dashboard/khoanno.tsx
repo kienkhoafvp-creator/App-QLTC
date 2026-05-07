@@ -9,6 +9,10 @@ import { GetChiTietKhoanNoUseCase } from "@/2_use_cases/transactions/GetChiTietK
 import { DeleteKhoanNoUseCase } from "@/2_use_cases/transactions/DeleteKhoanNoUseCase"; 
 import { NguonTien } from "@/1_domain/models/NguonTien";
 
+// Import thêm thư viện hiệu ứng và Component Biểu đồ nợ
+import { AnimatePresence } from "framer-motion";
+import ChartTraNo from "@/4_infrastructure/ui/components/cards/ChartTraNo";
+
 export default function KhoanNo() {
   const handleFormatCurrency = (value: string | number) => {
     if (value === undefined || value === null) return "0";
@@ -40,6 +44,9 @@ export default function KhoanNo() {
 
   const [popup, setPopup] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
   const [xoaModalData, setXoaModalData] = useState<{ id: string, ten: string } | null>(null);
+
+  // State quản lý hiển thị Biểu đồ nợ
+  const [showChart, setShowChart] = useState(false);
 
   useEffect(() => {
     const fetchNguonTien = async () => {
@@ -88,7 +95,6 @@ export default function KhoanNo() {
       const parsedTra = rawTienPhaiTra ? parseFloat(rawTienPhaiTra) : parsedGoc;
       const finalThuTu = thuTuInput !== "" ? Number(thuTuInput) - 1 : danhSachKhoanNo.length;
 
-      // XỬ LÝ LỖI ÉP KIỂU UUID TẠI ĐÂY: Nếu chọn "NO_TIEU_DUNG" thì đẩy xuống Database là null
       const rawData = {
         ten_khoan_no: tenKhoanNo,
         tong_goc_vay: parsedGoc,
@@ -167,11 +173,19 @@ export default function KhoanNo() {
   return (
     <div className="w-full h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-300 relative">
       
-      {/* HEADER */}
-      <div className="p-3 bg-slate-800 border-b border-red-500/30 text-center shadow-md flex-shrink-0 flex items-center justify-center">
+      {/* HEADER CẬP NHẬT: THÊM NÚT BIỂU ĐỒ */}
+      <div className="p-3 bg-slate-800 border-b border-red-500/30 text-center shadow-md flex-shrink-0 flex items-center justify-center relative">
         <h1 className="text-red-400 font-black uppercase tracking-widest text-sm whitespace-nowrap">
           Tổng Nợ ({handleFormatCurrency(tongNoHienTai)}đ)
         </h1>
+
+        <button 
+          onClick={() => setShowChart(true)}
+          className="absolute right-3 bg-slate-900 hover:bg-slate-700 text-red-400 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 shadow-inner"
+        >
+          <span className="text-sm leading-none">📊</span>
+          <span className="hidden sm:inline tracking-widest">BIỂU ĐỒ</span>
+        </button>
       </div>
 
       <div className="p-3 space-y-4 overflow-y-auto pb-24 flex-1">
@@ -238,44 +252,31 @@ export default function KhoanNo() {
           {danhSachKhoanNo.map((kn, index) => {
             const isExpanded = expandedId === kn.khoan_no_id;
             const chiTiet = chiTietGiaoDich[kn.khoan_no_id];
-            
-            // Xử lý tách ngày tháng
             const { dm, y } = parseDateSplit(kn.ngay_tao);
 
             return (
               <div key={kn.khoan_no_id} className="bg-slate-900 border border-slate-700/80 rounded-xl overflow-hidden flex flex-col shadow-sm">
-                
                 <div className="flex items-stretch w-full">
-                  {/* Cột 1: Mũi tên (32px) */}
                   <div className="flex flex-col items-center justify-center bg-slate-800 border-r border-slate-700/50 w-8 shrink-0">
                     <button onClick={(e) => { e.stopPropagation(); handleMove(index, 'up'); }} disabled={index === 0} className="flex-1 w-full text-slate-500 hover:text-emerald-400 disabled:opacity-20 transition-all text-xs">▲</button>
                     <button onClick={(e) => { e.stopPropagation(); handleMove(index, 'down'); }} disabled={index === danhSachKhoanNo.length - 1} className="flex-1 w-full text-slate-500 hover:text-orange-400 disabled:opacity-20 transition-all text-xs">▼</button>
                   </div>
 
-                  {/* THÔNG TIN CHÍNH */}
                   <div className="p-2 hover:bg-slate-800/50 transition-colors flex items-center gap-1.5 w-full cursor-pointer overflow-hidden" onClick={() => handleToggleExpand(kn.khoan_no_id)}>
-                    
-                    {/* Cột 2: Tên (Bị ép nhỏ lại do các cột kia rộng ra, cho phép rớt 2 dòng) */}
                     <div className="flex items-start gap-1 flex-1 min-w-0 pr-1">
                       <span className="text-[10px] font-black text-slate-600 shrink-0 mt-[1px]">{index + 1}.</span>
                       <span className="font-black text-red-400 text-[10px] uppercase line-clamp-2 leading-tight break-words" title={kn.ten_khoan_no}>
                         {kn.ten_khoan_no}
                       </span>
                     </div>
-                    
-                    {/* Cột 3: Phải trả (Mở rộng thành 68px để chứa số trăm triệu) */}
                     <div className="flex flex-col items-end shrink-0 w-[68px]">
                       <span className="text-[8px] text-slate-500 font-bold uppercase tracking-tighter">Phải Trả</span>
                       <span className="text-[10px] font-medium text-slate-300 leading-none w-full text-right truncate">{handleFormatCurrency(kn.tong_tien_phai_tra)}</span>
                     </div>
-
-                    {/* Cột 4: Còn lại (Mở rộng thành 75px để ưu tiên số quan trọng nhất) */}
                     <div className="flex flex-col items-end shrink-0 w-[75px] pl-1.5 border-l border-slate-700/50">
                       <span className="text-[8px] text-red-500 font-bold uppercase tracking-tighter">Còn</span>
                       <span className="text-[11px] font-black text-red-400 leading-none w-full text-right truncate">{handleFormatCurrency(kn.so_tien_con_lai)}</span>
                     </div>
-
-                    {/* Cột 5: Ngày (Xếp chồng) + Thùng rác (Tổng ~55px) */}
                     <div className="flex items-center justify-end gap-1.5 shrink-0 w-[55px]">
                       <div className="flex flex-col items-center justify-center bg-slate-800 px-1 py-0.5 rounded border border-slate-700">
                         <span className="text-[9px] font-bold text-slate-300 leading-none">{dm}</span>
@@ -289,11 +290,9 @@ export default function KhoanNo() {
                         🗑️
                       </button>
                     </div>
-
                   </div>
                 </div>
 
-                {/* XỔ XUỐNG: LỊCH SỬ TRẢ NỢ */}
                 {isExpanded && (
                   <div className="p-2 border-t border-slate-800 bg-slate-950/80 animate-in slide-in-from-top-2 duration-200 cursor-default" onClick={(e) => e.stopPropagation()}>
                     <h4 className="text-[10px] font-black text-emerald-500 uppercase mb-2 text-center tracking-widest border-b border-emerald-500/20 pb-1">Lịch sử trả nợ</h4>
@@ -320,20 +319,22 @@ export default function KhoanNo() {
         </div>
       </div>
 
+      {/* HIỂN THỊ POPUP BIỂU ĐỒ NỢ */}
+      <AnimatePresence>
+        {showChart && <ChartTraNo onClose={() => setShowChart(false)} />}
+      </AnimatePresence>
+
       {/* POPUP XÓA KHOẢN NỢ */}
       {xoaModalData && (
         <div className="absolute inset-0 z-[60] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
           <div className="w-full max-w-sm bg-slate-900 border border-red-500/50 rounded-2xl p-5 shadow-[0_0_50px_rgba(220,38,38,0.15)] relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
-            
             <h3 className="text-lg font-black text-red-400 mb-1 uppercase tracking-widest text-center">Hủy Bỏ Giao Ước</h3>
             <p className="text-[10px] text-slate-400 text-center mb-5 uppercase tracking-wide">Hành động này không thể hoàn tác</p>
-
             <div className="text-center mb-6">
               <p className="text-sm text-slate-300">Bạn có chắc chắn muốn thiêu rụi khoản nợ:</p>
               <p className="text-lg font-black text-white mt-1 border border-red-900/50 bg-red-950/30 rounded-lg p-2 mx-4">"{xoaModalData.ten}"?</p>
             </div>
-
             <div className="flex gap-3 mt-6">
               <button type="button" onClick={() => setXoaModalData(null)} className="flex-1 bg-slate-800 text-slate-400 font-bold py-2.5 rounded-xl text-xs uppercase hover:bg-slate-700 transition-all">Quay Lại</button>
               <button type="button" onClick={submitXoa} disabled={isLoading} className="flex-1 bg-gradient-to-r from-red-600 to-red-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg">{isLoading ? "Đang xử lý..." : "Xóa Bỏ"}</button>

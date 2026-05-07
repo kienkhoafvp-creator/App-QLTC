@@ -7,7 +7,8 @@ export class GetChartNguonThuUseCase {
     this.repo = new ThongKeNguonThuChartRepo();
   }
 
-  async execute() {
+  // THÊM: Tham số groupBy để phân loại Tuần / Tháng / Năm
+  async execute(groupBy: 'tuan' | 'thang' | 'nam' = 'tuan') {
     const [rawData, danhSachNguon] = await Promise.all([
       this.repo.layDuLieuBieuDo(),
       this.repo.layDanhSachNguonHienTai()
@@ -23,25 +24,38 @@ export class GetChartNguonThuUseCase {
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const shortYear = row.nam.toString().slice(-2);
       
-      // Trục hoành: Tuần 42/26
-      const xAxisLabel = `Tuần ${row.tuan}/${shortYear}`;
+      let key = "";
+      let xAxisLabel = "";
 
-      if (!chartDataMap.has(row.id_kiem_toan)) {
-        chartDataMap.set(row.id_kiem_toan, {
+      // PHÂN LOẠI NHÓM THỜI GIAN
+      if (groupBy === 'tuan') {
+        key = row.id_kiem_toan;
+        xAxisLabel = `Tuần ${row.tuan}/${shortYear}`;
+      } else if (groupBy === 'thang') {
+        key = `${row.nam}-${month}`;
+        xAxisLabel = `Tháng ${month}/${shortYear}`;
+      } else if (groupBy === 'nam') {
+        key = `${row.nam}`;
+        xAxisLabel = `Năm ${row.nam}`;
+      }
+
+      if (!chartDataMap.has(key)) {
+        chartDataMap.set(key, {
           name: xAxisLabel,
           sortTime: date.getTime()
         });
       }
 
-      // Xoay ngang: Ép lợi nhuận vào tên cột tương ứng
-      const record = chartDataMap.get(row.id_kiem_toan);
-      record[row.ten_nguon] = Number(row.loi_nhuan);
+      // SỬA LỖI: Khi gom theo Tháng/Năm, phải CỘNG DỒN số tiền của các tuần lại với nhau
+      const record = chartDataMap.get(key);
+      const currentLoiNhuan = record[row.ten_nguon] || 0;
+      record[row.ten_nguon] = currentLoiNhuan + Number(row.loi_nhuan);
     });
 
-    // Ép mảng và sắp xếp theo thời gian chốt
+    // Ép mảng và sắp xếp theo thời gian
     const chartData = Array.from(chartDataMap.values()).sort((a, b) => a.sortTime - b.sortTime);
 
-    // Điền khuyết (Fill Zero) cho các nguồn bị vắng mặt trong tuần
+    // Điền khuyết (Fill Zero)
     chartData.forEach(record => {
       tenCacNguonHienTai.forEach(name => {
         if (record[name] === undefined) {
