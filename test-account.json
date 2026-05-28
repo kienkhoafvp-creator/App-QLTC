@@ -1,0 +1,22 @@
+{
+  "test_account": {
+    "email": "tester@qltc.com",
+    "password": "Password123!",
+    "full_name": "Chiến Binh Thử Nghiệm",
+    "username": "tester_hero",
+    "phone": "0987654321"
+  },
+  "initial_data": {
+    "nguon_tien": [
+      { "ten_nguon": "Ví Tiền Mặt", "loai": "TIEN_MAT", "so_du": 5000000 },
+      { "ten_nguon": "Ngân Hàng Techcombank", "loai": "NGAN_HANG", "so_du": 20000000 }
+    ],
+    "ngan_sach": [
+      { "ten_ngan_sach": "Ăn Uống", "dinh_muc": 3000000 },
+      { "ten_ngan_sach": "Di Chuyển", "dinh_muc": 1000000 }
+    ],
+    "khoan_no": [
+      { "ten_khoan_no": "Vay Mua Xe", "tong_no": 50000000, "da_tra": 10000000 }
+    ]
+  }
+}
