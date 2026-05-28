@@ -24,3 +24,69 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Hide native calendar/picker icon for datetime/date/time inputs */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+input[type="datetime-local"], input[type="date"], input[type="time"] {
+  -moz-appearance: textfield;
+  appearance: none;
+
+}
+
+/* Hide number input spinners (Chrome, Safari, Edge) */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Disable textarea resize and remove resize handle */
+textarea {
+  resize: none;
+  /* hide scrollbar and prevent default scroll UI */
+  overflow: hidden;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+textarea::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Hide native scrollbars for elements using overflow-auto / overflow-x-auto / overflow-y-auto */
+.overflow-auto, .overflow-x-auto, .overflow-y-auto, .scrollable-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.overflow-auto::-webkit-scrollbar, .overflow-x-auto::-webkit-scrollbar, .overflow-y-auto::-webkit-scrollbar, .scrollable-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
+}
+
+/* Hide native select dropdown arrow / chevron */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+
+/* Internet Explorer / Edge legacy */
+select::-ms-expand {
+  display: none;
+}

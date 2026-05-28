@@ -8,7 +8,7 @@ export class CreatePhieuChiUseCase {
     this.repo = new PhieuChiRepo();
   }
 
-  async execute(raw_data: { so_tien: number; ly_do_chi: string; nguoi_chi: string; thoi_gian: string; mang_chi_id: string }) {
+  async execute(raw_data: { so_tien: number; ly_do_chi: string; nguoi_chi: string; thoi_gian: string; mang_chi_id: string; hang_muc?: string; chi_tiet_bo_sung?: string; photos?: string[] }) {
     if (raw_data.so_tien <= 0) throw new Error("Số tiền chi phải lớn hơn 0");
     if (!raw_data.mang_chi_id) throw new Error("Bắt buộc phải chọn chi tiết khoản chi.");
 
