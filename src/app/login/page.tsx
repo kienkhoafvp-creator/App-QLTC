@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isAgreed, setIsAgreed] = useState(false);
   
   const [popup, setPopup] = useState<{ isOpen: boolean; type: "success" | "error"; message: string }>({
     isOpen: false,
@@ -20,7 +21,7 @@ export default function LoginPage() {
     message: "",
   });
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     try {
@@ -96,9 +97,9 @@ export default function LoginPage() {
           {/* Thêm suppressHydrationWarning vào thẻ button để chặn cảnh báo từ trình quản lý mật khẩu */}
           <button
             suppressHydrationWarning
-            disabled={isLoading}
+            disabled={isLoading || !isAgreed}
             type="submit"
-            className="group relative w-full mt-4 overflow-hidden rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition-all hover:bg-blue-500 active:scale-95 shadow-[0_4px_0_rgb(29,78,216)] active:shadow-none active:translate-y-[4px]"
+            className="group relative w-full mt-4 overflow-hidden rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition-all hover:bg-blue-500 active:scale-95 shadow-[0_4px_0_rgb(29,78,216)] active:shadow-none active:translate-y-[4px] disabled:opacity-50 disabled:pointer-events-none"
           >
             <div className="flex items-center justify-center gap-2">
               {isLoading ? (
@@ -113,6 +114,20 @@ export default function LoginPage() {
             {/* Hiệu ứng quét sáng ngang nút bấm */}
             <div className="absolute inset-0 w-1/2 h-full bg-white/10 skew-x-[-25deg] -translate-x-[150%] group-hover:translate-x-[250%] transition-transform duration-700" />
           </button>
+
+          {/* Checkbox điều khoản */}
+          <div className="flex items-start gap-2 mt-4 px-1">
+            <input 
+              type="checkbox" 
+              id="tos-agree" 
+              checked={isAgreed}
+              onChange={(e) => setIsAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 cursor-pointer"
+            />
+            <label htmlFor="tos-agree" className="text-xs text-slate-400 leading-snug cursor-pointer select-none">
+              Tôi đồng ý với <Link href="/terms-of-service" className="text-blue-400 hover:text-blue-300 font-bold transition-colors">Điều khoản dịch vụ</Link> của hệ thống.
+            </label>
+          </div>
         </form>
 
         <div className="mt-6 text-center">

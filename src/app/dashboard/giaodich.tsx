@@ -194,12 +194,14 @@ export default function GiaoDich({ onOpenLichSu }: { onOpenLichSu?: () => void }
       <div className="p-4 overflow-y-auto flex-1 space-y-5 pb-8">
         <div className="flex bg-slate-800 rounded-xl p-1 shadow-inner border border-slate-700">
           <button 
+            type="button"
             onClick={() => { setActiveTab("chi"); resetForm(); }}
             className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'chi' ? 'bg-orange-500/20 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.2)]' : 'text-slate-500 hover:text-slate-300'}`}
           >
             Phiếu Chi
           </button>
           <button 
+            type="button"
             onClick={() => { setActiveTab("thu"); resetForm(); }}
             className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'thu' ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'text-slate-500 hover:text-slate-300'}`}
           >
