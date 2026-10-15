@@ -51,6 +51,10 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
+  const handleOpenDeleteAccount = () => {
+    router.push("/delete-account");
+  };
+
   const handleFormatShortCurrency = (val: number) => {
     if (!val || val === 0) return "0";
     const isNeg = val < 0;
@@ -121,6 +125,9 @@ export default function DashboardPage() {
             </button>
           </div>
 
+          <button type="button" onClick={handleOpenDeleteAccount} aria-label={"X\u00f3a t\u00e0i kho\u1ea3n"} title={"X\u00f3a t\u00e0i kho\u1ea3n"} className="w-9 h-9 flex-shrink-0 flex items-center justify-center border border-red-500/40 rounded-xl bg-red-500/10 hover:bg-red-500/20 active:scale-95 transition-all shadow-[0_0_10px_rgba(239,68,68,0.15)]">
+            {"\uD83D\uDDD1\uFE0F"}
+          </button>
           <button onClick={handleLogout} className="w-9 h-9 flex-shrink-0 flex items-center justify-center border border-red-500/40 rounded-xl bg-red-500/10 hover:bg-red-500/20 active:scale-95 transition-all shadow-[0_0_10px_rgba(239,68,68,0.15)]">
             <span className="text-lg">🚪</span>
           </button>
