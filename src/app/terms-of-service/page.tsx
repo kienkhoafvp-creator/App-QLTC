@@ -136,7 +136,7 @@ export default function TermsOfServicePage() {
             </div>
 
             <h2>1. Chấp Nhận Điều Khoản</h2>
-            <p>Bằng cách tải, cài đặt, hoặc sử dụng ứng dụng Sổ Sách Xịn ("Ứng dụng"), bạn đồng ý bị ràng buộc bởi các Điều khoản Sử Dụng này ("Điều khoản"). Nếu bạn không đồng ý với các Điều khoản này, vui lòng không sử dụng Ứng dụng.</p>
+            <p>Bằng cách tải, cài đặt, hoặc sử dụng ứng dụng Sổ Sách Xịn (&quot;Ứng dụng&quot;), bạn đồng ý bị ràng buộc bởi các Điều khoản Sử Dụng này (&quot;Điều khoản&quot;). Nếu bạn không đồng ý với các Điều khoản này, vui lòng không sử dụng Ứng dụng.</p>
 
             <h2>2. Mô Tả Dịch Vụ</h2>
             <p>Sổ Sách Xịn là ứng dụng quản lý tài chính cá nhân giúp người dùng:</p>
@@ -167,8 +167,19 @@ export default function TermsOfServicePage() {
                 <li>Bạn có thể xóa dữ liệu của mình bất cứ lúc nào</li>
             </ul>
 
-            <h3>3.3 Chính Sách Quyền Riêng Tư</h3>
-            <p>Để biết thêm chi tiết về cách chúng tôi xử lý dữ liệu của bạn, vui lòng xem <a href="#privacy-policy">Chính Sách Quyền Riêng Tư</a> của chúng tôi.</p>
+            <h3>3.3 Xử Lý Bằng AI (Google Gemini)</h3>
+            <p>Khi bạn cho phép, các tính năng AI (nhập nhanh, quét hóa đơn, gợi ý tài chính) gửi dữ liệu tới <strong>Google Gemini</strong> (qua Firebase AI Logic của Google) để xử lý:</p>
+            <ul>
+                <li><strong>Nhập nhanh:</strong> đoạn chữ bạn gõ hoặc đọc (đã chuyển thành chữ)</li>
+                <li><strong>Quét hóa đơn:</strong> ảnh hóa đơn bạn chọn</li>
+                <li><strong>Gợi ý tài chính:</strong> số liệu thu, chi, nợ, đầu tư tổng hợp theo tháng, cùng tên ngân sách và danh mục</li>
+                <li>Kèm theo mỗi yêu cầu: danh sách danh mục, tên ví, loại tiền, ngôn ngữ và ngày hiện tại</li>
+            </ul>
+            <p>Chúng tôi không gửi tên, email, số điện thoại hay mã tài khoản của bạn. Dữ liệu chỉ dùng để trả kết quả cho yêu cầu của bạn. Google xử lý dữ liệu theo điều khoản của Google dành cho Gemini API. Chúng tôi có thể lưu nhật ký yêu cầu AI để giám sát lỗi và chi phí.</p>
+            <p>Chia sẻ dữ liệu với AI mặc định tắt. Chỉ khi bạn đồng ý, dữ liệu mới được gửi. Bạn có thể rút lại bất cứ lúc nào tại Hồ sơ &rarr; Chia sẻ dữ liệu với AI.</p>
+
+            <h3 id="privacy-policy">3.4 Chính Sách Quyền Riêng Tư</h3>
+            <p>Mục 3 này là chính sách quyền riêng tư của ứng dụng: nêu dữ liệu chúng tôi thu thập, cách thu thập, mục đích sử dụng và các bên thứ ba nhận dữ liệu (Google, gồm Firebase và Gemini).</p>
 
             <h2>4. Trách Nhiệm Người Dùng</h2>
             <p>Bạn đồng ý:</p>
@@ -181,7 +192,7 @@ export default function TermsOfServicePage() {
             </ul>
 
             <h2>5. Hạn Chế Trách Nhiệm</h2>
-            <p>Ứng dụng được cung cấp "nguyên trạng" mà không có bất kỳ bảo đảm nào, dù là rõ ràng hay ngầm định. Chúng tôi không đảm bảo rằng Ứng dụng sẽ:</p>
+            <p>Ứng dụng được cung cấp &quot;nguyên trạng&quot; mà không có bất kỳ bảo đảm nào, dù là rõ ràng hay ngầm định. Chúng tôi không đảm bảo rằng Ứng dụng sẽ:</p>
             <ul>
                 <li>Hoạt động không bị gián đoạn hoặc không có lỗi</li>
                 <li>Đáp ứng các yêu cầu cụ thể của bạn</li>
@@ -248,7 +259,7 @@ export default function TermsOfServicePage() {
             </div>
 
             <h2>1. Acceptance of Terms</h2>
-            <p>By downloading, installing, or using the Sổ Sách Xịn application ("App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the App.</p>
+            <p>By downloading, installing, or using the Sổ Sách Xịn application (&quot;App&quot;), you agree to be bound by these Terms of Service (&quot;Terms&quot;). If you do not agree to these Terms, please do not use the App.</p>
 
             <h2>2. Service Description</h2>
             <p>Sổ Sách Xịn is a personal finance management application that helps users:</p>
@@ -279,8 +290,19 @@ export default function TermsOfServicePage() {
                 <li>You can delete your data at any time</li>
             </ul>
 
-            <h3>3.3 Privacy Policy</h3>
-            <p>For more details on how we handle your data, please review our <a href="#privacy-policy">Privacy Policy</a>.</p>
+            <h3>3.3 AI Processing (Google Gemini)</h3>
+            <p>When you allow it, the AI features (quick entry, receipt scan, financial advice) send data to <strong>Google Gemini</strong> (through Google&apos;s Firebase AI Logic) for processing:</p>
+            <ul>
+                <li><strong>Quick entry:</strong> the text you type or dictate (after speech-to-text)</li>
+                <li><strong>Receipt scan:</strong> the receipt photos you choose</li>
+                <li><strong>Financial advice:</strong> monthly totals of income, spending, debt and investment, plus budget and category names</li>
+                <li>With each request: the category list, wallet names, currency, language and today&apos;s date</li>
+            </ul>
+            <p>We do not send your name, email, phone number or account ID. The data is used only to return the result of your request. Google processes it under Google&apos;s terms for the Gemini API. We may keep AI request logs to monitor errors and costs.</p>
+            <p>Sharing data with AI is off by default. Data is sent only after you agree, and you can withdraw consent at any time in Profile &rarr; Share data with AI.</p>
+
+            <h3 id="privacy-policy-en">3.4 Privacy Policy</h3>
+            <p>This Section 3 is the App&apos;s privacy policy: it states what data we collect, how we collect it, how we use it, and the third parties that receive data (Google, including Firebase and Gemini).</p>
 
             <h2>4. User Responsibilities</h2>
             <p>You agree to:</p>
@@ -293,7 +315,7 @@ export default function TermsOfServicePage() {
             </ul>
 
             <h2>5. Limitation of Liability</h2>
-            <p>The App is provided "as is" without any warranties, express or implied. We do not guarantee that the App will:</p>
+            <p>The App is provided &quot;as is&quot; without any warranties, express or implied. We do not guarantee that the App will:</p>
             <ul>
                 <li>Operate uninterrupted or error-free</li>
                 <li>Meet your specific requirements</li>
