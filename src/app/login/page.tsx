@@ -14,24 +14,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
-  
+
   const [popup, setPopup] = useState<{ isOpen: boolean; type: "success" | "error"; message: string }>({
     isOpen: false,
     type: "success",
     message: "",
   });
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       await AuthRepo.login(identifier, password);
-      setPopup({ 
-        isOpen: true, 
-        type: "success", 
-        message: "HỆ THỐNG ĐÃ KẾT NỐI! Đang nạp dữ liệu tài chính..." 
+      setPopup({
+        isOpen: true,
+        type: "success",
+        message: "HỆ THỐNG ĐÃ KẾT NỐI! Đang nạp dữ liệu tài chính..."
       });
-      
+
       // Sửa lỗi Logic: Dùng window.location.href để ép trình duyệt gửi Cookie mới qua Lính gác (Middleware)
       setTimeout(() => {
         window.location.href = "/dashboard";
@@ -46,14 +46,14 @@ export default function LoginPage() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center min-h-[80vh] px-4"
     >
       {/* Khung Card chính - Bóp hẹp 2 bên theo Quy tắc 5 */}
       <div className="w-full max-w-[360px] bg-slate-900/80 border-2 border-blue-500/30 rounded-3xl p-6 shadow-[0_0_20px_rgba(59,130,246,0.2)] backdrop-blur-md">
-        
+
         {/* Header mang phong cách Trạm điều khiển */}
         <div className="text-center mb-6">
           <div className="inline-block p-3 rounded-full bg-blue-500/10 mb-3 border border-blue-500/20">
@@ -80,7 +80,7 @@ export default function LoginPage() {
               required
             />
           </div>
-          
+
           <div className="relative">
             <ZoomInput
               label="MÃ KHÓA BẢO MẬT"
@@ -117,15 +117,23 @@ export default function LoginPage() {
 
           {/* Checkbox điều khoản */}
           <div className="flex items-start gap-2 mt-4 px-1">
-            <input 
-              type="checkbox" 
-              id="tos-agree" 
+            <input
+              type="checkbox"
+              id="tos-agree"
               checked={isAgreed}
               onChange={(e) => setIsAgreed(e.target.checked)}
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 cursor-pointer"
             />
             <label htmlFor="tos-agree" className="text-xs text-slate-400 leading-snug cursor-pointer select-none">
-              Tôi đồng ý với <Link href="/terms-of-service" className="text-blue-400 hover:text-blue-300 font-bold transition-colors">Điều khoản dịch vụ</Link> của hệ thống.
+              Tôi đồng ý với{" "}
+              <Link href="/terms-of-service" className="text-blue-400 hover:text-blue-300 font-bold transition-colors">
+                Điều khoản dịch vụ
+              </Link>{" "}
+              và{" "}
+              <Link href="/privacy-policy" className="text-blue-400 hover:text-blue-300 font-bold transition-colors">
+                Chính sách quyền riêng tư riêng
+              </Link>{" "}
+              của hệ thống.
             </label>
           </div>
         </form>
@@ -134,8 +142,8 @@ export default function LoginPage() {
           <p className="text-[10px] text-slate-500 font-medium">
             CHƯA CÓ QUYỀN TRUY CẬP?
           </p>
-          <Link 
-            href="/register" 
+          <Link
+            href="/register"
             className="text-xs text-blue-400 font-bold hover:text-blue-300 flex items-center justify-center gap-1 mt-1 transition-colors"
           >
             <ShieldCheck className="w-3 h-3" />
@@ -145,11 +153,11 @@ export default function LoginPage() {
       </div>
 
       {/* Pop-up thay thế Alert mặc định theo Quy tắc 6 */}
-      <AlertPopup 
-        isOpen={popup.isOpen} 
-        type={popup.type} 
-        message={popup.message} 
-        onClose={() => setPopup({ ...popup, isOpen: false })} 
+      <AlertPopup
+        isOpen={popup.isOpen}
+        type={popup.type}
+        message={popup.message}
+        onClose={() => setPopup({ ...popup, isOpen: false })}
       />
     </motion.div>
   );
